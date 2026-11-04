@@ -1,0 +1,45 @@
+# Produktionsnaher Betrieb: Web-App + Worker (+ einmalige Migration).
+# Datenbank: Supabase (EU) über DATABASE_URL in .env.
+# Für lokale Entwicklung ohne Supabase: `docker compose --profile local-db up -d` startet zusätzlich PostgreSQL.
+
+services:
+  migrate:
+    build: .
+    command: ["node_modules/.bin/tsx", "scripts/migrate.ts"]
+    env_file: .env
+    restart: "no"
+
+  web:
+    build: .
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: ["node_modules/.bin/tsx", "worker/index.ts"]
+    env_file: .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+  db:
+    profiles: ["local-db"]
+    image: postgres:16
+    environment:
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: crm
+      POSTGRES_DB: crm
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

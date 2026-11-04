@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Akquise-CRM für Gebäudereinigung (Hamburg)
 
-## Getting Started
+Interne B2B-Vertriebsplattform: Firmenrecherche, CRM, rechtssichere E-Mail-Kampagnen, IMAP/SMTP-Postfach, KI-Antwortanalyse, Pipeline, Angebote/Verträge, Automatisierungen und Kennzahlen.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui-Komponenten (Radix) · Recharts · PostgreSQL/Supabase · Drizzle ORM · pg-boss (Job-Queue) · ImapFlow/Nodemailer · Anthropic/OpenAI · Zod · Vitest
+
+## Funktionsumfang
+
+| Bereich | Inhalt |
+|---|---|
+| Dashboard | 14 KPIs und 6 Diagramme, alle aus gespeicherten Daten. Filter nach Zeitraum, Branche, Kampagne, Mitarbeiter und Status. Checkliste für die Einrichtung. |
+| Firmenfinder | OpenStreetMap/Overpass (ODbL) nach Branche, Stadtteil (Auswahl nach Bezirken), PLZ und Name. Erkennt vorhandene Datensätze. Dazu CSV-Import und manuelle Erfassung. Ohne Datenquelle steht in der Oberfläche „Nicht verbunden“; es werden keine Beispieltreffer gezeigt. |
+| Unternehmen | Liste mit Volltextsuche (deutsch), Filtern, Sortierung und Sammelaktionen (Status, Zuständigkeit, Tags, Export, Löschen). Duplikaterkennung und Zusammenführen. Detailseite mit Zeitleiste, Kommunikation, Aufgaben, Terminen, Angeboten, Verträgen, mehreren Standorten, Wiedervorlage und Potenzial-Score (nachvollziehbar, manuell überschreibbar). |
+| Ansprechpartner | Mehrere pro Firma. **Vertriebsstatus und Werbeerlaubnis sind getrennte Felder.** Die Erlaubnis wird mit Nachweis gepflegt; jede Änderung landet im Protokoll. |
+| Kampagnen | Sequenzen mit bis zu 6 Schritten, Platzhaltern und Vorschau, optional KI-Personalisierung. Versandfenster (Europe/Berlin), Tageslimits und Mindestabstand. Stopp bei Antwort. Versand über SMTP oder Brevo. |
+| Postfach | IMAP-Abruf alle 2 Minuten mit Zuordnung zu Thread, Kontakt und Firma. Erkennt Bounces (DSN, RFC 3464) und Abwesenheitsnotizen. KI-Analyse, KI-Antwortentwurf, manuelle Zuordnung. |
+| Pipeline | Kanban mit Drag & Drop, gewichteter Pipeline-Wert und Grund bei verlorenen Deals. |
+| Aufgaben & Termine | Wiedervorlagen, Rückrufe, Besichtigungen; Ansichten heute fällig und überfällig. |
+| Angebote & Verträge | Positionseditor, druckbares Angebot (PDF über den Browser). Bei „Angenommen“ wird automatisch ein Vertrag angelegt und der Deal auf gewonnen gesetzt. |
+| Automatisierungen | Wenn-Dann-Regeln mit 7 Auslösern und 6 Aktionen. Jede Regel läuft pro Ereignis genau einmal; Ausführungsprotokoll. |
+| Analytics | Quoten, Funnel, Antwortkategorien, Vergleich nach Branche, Kampagne und Mitarbeiter. |
+| Einstellungen | Impressum/Absender, Postfach mit Verbindungstest, Integrationen, Team, Profil/Signatur, Sperrliste, Vertrieb, Systemstatus. |
+
+## Schnellstart (lokal)
+
+Voraussetzungen: Node.js ≥ 20.9 und PostgreSQL ≥ 15 (lokal oder Supabase).
+
+```bash
+npm install
+```
+
+```bash
+cp .env.example .env
+```
+
+In `.env` mindestens `DATABASE_URL`, `APP_ENCRYPTION_KEY` und `AUTH_SECRET` setzen. Für die lokale Entwicklung zusätzlich `AUTH_PROVIDER=local` und `APP_URL=http://localhost:3000`.
+
+```bash
+npm run db:migrate
+```
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Den Worker in einem zweiten Terminal starten (Versand, Postfach-Abruf, KI, Automatisierungen):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run worker
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Beim ersten Aufruf von http://localhost:3000 legen Sie das Administratorkonto an (nur bei `AUTH_PROVIDER=local`). Danach unter **Einstellungen**:
 
-## Learn More
+1. Unternehmen/Impressum ausfüllen
+2. E-Mail-Postfach verbinden
+3. Integrationen prüfen
 
-To learn more about Next.js, take a look at the following resources:
+Optional: fiktive, als „Demo“ markierte Testdaten (nur für die Entwicklung, in Produktion gesperrt):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run db:seed:demo
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run db:seed:demo -- --remove
+```
 
-## Deploy on Vercel
+## Tests
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm test
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Unit-Tests:** Rechtsprüfung, Templates, DSN-/Bounce-Erkennung, Abmelde-Erkennung, CSV-Parser, Overpass-Abfragen, Scoring, Verschlüsselung, Versandfenster inkl. Sommerzeit.
+- **Integrationstest:** gegen eine echte PostgreSQL-Testdatenbank (`TEST_DATABASE_URL`, Standard `crm_test`) und einen lokalen SMTP-Server über TLS. Abgedeckt ist der ganze Ablauf: Kampagne → Empfängerprüfung → Versand → SMTP-Ablehnung (Hard Bounce) → Idempotenz → Antwortzuordnung → Automatisierung → Abmeldung per E-Mail → DSN-Bounce → Abmeldelink → Brevo-Webhook → Kennzahlen.
+
+Weitere Prüfungen:
+
+```bash
+npm run typecheck
+```
+
+```bash
+npm run lint
+```
+
+## Betrieb
+
+Siehe [docs/BETRIEB.md](docs/BETRIEB.md) (Supabase EU, Docker, Postfach, Brevo, KI). Architekturentscheidungen stehen in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md), die rechtliche Umsetzung in [docs/RECHTLICHES.md](docs/RECHTLICHES.md).
