@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         ← Zurück
       </Link>
       <h1 className="mt-4 mb-4 text-2xl font-semibold">Datenschutzhinweise zur Akquise-Software</h1>
-      <p className="mb-3">Diese Anwendung verarbeitet geschäftliche Kontaktdaten von Unternehmen und deren Ansprechpartnern zur Anbahnung und Durchführung von Reinigungsverträgen (Art. 6 Abs. 1 lit. b und f DSGVO).</p>
+      <p className="mb-3">Diese Anwendung verarbeitet geschäftliche Kontaktdaten von Unternehmen und deren Ansprechpartnern zur Anbahnung und Durchführung von Catering-Aufträgen (Art. 6 Abs. 1 lit. b und f DSGVO).</p>
       <ul className="mb-3 list-disc space-y-1 pl-5">
         <li>Werbe-E-Mails werden ausschließlich an Empfänger mit nachgewiesener Einwilligung bzw. im Rahmen von § 7 Abs. 3 UWG versendet. Jede Werbe-E-Mail enthält einen Abmeldelink.</li>
         <li>Widersprüche und Abmeldungen werden sofort umgesetzt und dauerhaft auf einer Sperrliste dokumentiert.</li>

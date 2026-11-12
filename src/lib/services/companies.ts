@@ -27,7 +27,7 @@ export const companyInputSchema = z.object({
   email: optStr.refine((v) => !v || !!normalizeEmail(v), "Ungültige E-Mail-Adresse"),
   companySize: optStr,
   employeeCount: z.coerce.number().int().min(0).optional().nullable(),
-  areaSqm: z.coerce.number().int().min(0).optional().nullable(),
+  eventGuests: z.coerce.number().int().min(0).optional().nullable(),
   source: z.string().trim().default("manual"),
   sourceRef: optStr,
   notes: optStr,
@@ -129,7 +129,7 @@ export async function createCompany(raw: CompanyInput, actorId: string | null, c
       email: normalizeEmail(input.email),
       companySize: input.companySize,
       employeeCount: input.employeeCount ?? null,
-      areaSqm: input.areaSqm ?? null,
+      eventGuests: input.eventGuests ?? null,
       source: input.source,
       sourceRef: input.sourceRef,
       notes: input.notes,
@@ -181,7 +181,7 @@ export async function updateCompany(id: string, raw: Partial<CompanyInput>, acto
     patch.domain = isFreemailDomain(d) ? null : d;
   }
   if ("employeeCount" in raw) patch.employeeCount = input.employeeCount ?? null;
-  if ("areaSqm" in raw) patch.areaSqm = input.areaSqm ?? null;
+  if ("eventGuests" in raw) patch.eventGuests = input.eventGuests ?? null;
   if ("ownerId" in raw) patch.ownerId = input.ownerId ?? null;
   if (input.tags) patch.tags = input.tags;
   if ("estimatedMonthlyValue" in raw) patch.estimatedMonthlyValue = input.estimatedMonthlyValue != null ? String(input.estimatedMonthlyValue) : null;
@@ -219,7 +219,7 @@ export async function recalcCompanyScore(id: string, conn: Conn = db) {
   const { score } = scoreCompany({
     industry: c.industry,
     employeeCount: c.employeeCount,
-    areaSqm: c.areaSqm,
+    eventGuests: c.eventGuests,
     companySize: c.companySize,
     hasWebsite: !!c.website,
     hasPhone: !!c.phone,
@@ -244,7 +244,7 @@ export async function mergeCompanies(targetId: string, sourceIds: string[], acto
     const sources = await tx.select().from(schema.companies).where(inArray(schema.companies.id, ids));
     const fill: Partial<typeof schema.companies.$inferInsert> = {};
     for (const s of sources) {
-      for (const k of ["street", "postalCode", "district", "website", "domain", "phone", "email", "companySize", "employeeCount", "areaSqm"] as const) {
+      for (const k of ["street", "postalCode", "district", "website", "domain", "phone", "email", "companySize", "employeeCount", "eventGuests"] as const) {
         if (target[k] == null && s[k] != null && fill[k] == null) (fill as Record<string, unknown>)[k] = s[k];
       }
     }

@@ -57,7 +57,7 @@ export function FollowUpButton({ companyId, current }: { companyId: string; curr
         </div>
         <div className="grid gap-1.5">
           <Label>Notiz</Label>
-          <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="z. B. Vertrag läuft im März aus" />
+          <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="z. B. Sommerfest im Juni anfragen" />
         </div>
         <div className="flex justify-between gap-2">
           {current ? (

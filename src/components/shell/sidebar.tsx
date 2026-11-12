@@ -13,7 +13,7 @@ import {
   Megaphone,
   Search,
   Settings,
-  Sparkles,
+  Fish,
   Users,
   Workflow,
 } from "lucide-react";
@@ -28,7 +28,7 @@ export const NAV = [
   { href: "/postfach", label: "E-Mail-Postfach", icon: Inbox, badgeKey: "inbox" as const },
   { href: "/pipeline", label: "Vertriebspipeline", icon: KanbanSquare },
   { href: "/aufgaben", label: "Aufgaben & Termine", icon: CalendarCheck, badgeKey: "tasks" as const },
-  { href: "/angebote", label: "Angebote & Verträge", icon: FileSignature },
+  { href: "/angebote", label: "Angebote & Aufträge", icon: FileSignature },
   { href: "/automatisierungen", label: "Automatisierungen", icon: Workflow },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/einstellungen", label: "Einstellungen", icon: Settings },
@@ -65,11 +65,11 @@ export function Brand({ companyName }: { companyName: string }) {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 px-2.5">
       <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand text-brand-foreground">
-        <Sparkles className="size-4" />
+        <Fish className="size-4" />
       </div>
       <div className="min-w-0 leading-tight">
         <p className="truncate text-sm font-semibold">{companyName}</p>
-        <p className="text-[11px] text-muted-foreground">Akquise-CRM · Hamburg</p>
+        <p className="text-[11px] text-muted-foreground">Sushi-Catering · CRM</p>
       </div>
     </Link>
   );

@@ -26,7 +26,7 @@ export default async function FinderPage() {
                 <StatusDot state={osm ? "connected" : "incomplete"} /> {osm ? "Verbunden" : "Nicht verbunden"}
               </span>
             </CardTitle>
-            <CardDescription>Offene Geodaten (ODbL) über die Overpass-API: Praxen, Kitas, Hotels, Büros, Hausverwaltungen u. v. m.</CardDescription>
+            <CardDescription>Offene Geodaten (ODbL) über die Overpass-API: Agenturen, Kanzleien, Coworking-Spaces, Eventlocations, Hotels, Büros u. v. m.</CardDescription>
           </CardHeader>
         </Card>
         <Card>

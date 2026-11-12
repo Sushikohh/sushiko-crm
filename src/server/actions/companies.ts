@@ -122,13 +122,13 @@ export async function setFollowUpAction(companyId: string, at: string | null, no
   }, "Wiedervorlage gesetzt");
 }
 
-export async function addLocationAction(companyId: string, input: { label: string; street?: string; postalCode?: string; city?: string; district?: string; areaSqm?: number | null }) {
+export async function addLocationAction(companyId: string, input: { label: string; street?: string; postalCode?: string; city?: string; district?: string; headcount?: number | null }) {
   await requireUser();
   return run(async () => {
     const v = z
-      .object({ label: z.string().trim().min(1, "Bezeichnung fehlt"), street: z.string().trim().optional(), postalCode: z.string().trim().optional(), city: z.string().trim().optional(), district: z.string().trim().optional(), areaSqm: z.coerce.number().int().min(0).nullable().optional() })
+      .object({ label: z.string().trim().min(1, "Bezeichnung fehlt"), street: z.string().trim().optional(), postalCode: z.string().trim().optional(), city: z.string().trim().optional(), district: z.string().trim().optional(), headcount: z.coerce.number().int().min(0).nullable().optional() })
       .parse(input);
-    await db.insert(schema.companyLocations).values({ companyId, ...v, city: v.city || "Hamburg", areaSqm: v.areaSqm ?? null });
+    await db.insert(schema.companyLocations).values({ companyId, ...v, city: v.city || "Hamburg", headcount: v.headcount ?? null });
     await recalcCompanyScore(companyId);
     revalidate(companyId);
   }, "Standort hinzugefügt");

@@ -1,15 +1,15 @@
 export const INDUSTRIES = {
-  property_management: "Hausverwaltung",
-  office: "Büro / Unternehmen",
-  medical: "Arztpraxis / Medizin",
-  fitness: "Fitnessstudio",
-  daycare: "Kita",
-  education: "Bildungseinrichtung",
-  retail: "Einzelhandel",
-  hotel: "Hotel / Beherbergung",
-  business_park: "Gewerbepark",
-  logistics: "Logistik",
-  commercial_property: "Gewerbeimmobilie",
+  office: "Unternehmen & Büros",
+  agency: "Agenturen & Medien",
+  event_agency: "Eventagenturen & Locations",
+  consulting: "Kanzleien & Beratungen",
+  tech: "Tech & Start-ups",
+  coworking: "Coworking & Business Center",
+  hotel: "Hotels & Tagungshäuser",
+  medical: "Praxen & Kliniken",
+  education: "Hochschulen & Akademien",
+  fitness: "Fitness & Wellness",
+  retail: "Einzelhandel & Showrooms",
   other: "Sonstige",
 } as const;
 export type IndustryKey = keyof typeof INDUSTRIES;
@@ -24,7 +24,7 @@ export const ACQ_STATUS = {
   interested: { label: "Interessiert", tone: "green" },
   not_interested: { label: "Nicht interessiert", tone: "red" },
   contact_later: { label: "Später kontaktieren", tone: "amber" },
-  visit_scheduled: { label: "Besichtigung vereinbart", tone: "violet" },
+  visit_scheduled: { label: "Verkostung vereinbart", tone: "violet" },
   offer_created: { label: "Angebot erstellt", tone: "violet" },
   negotiation: { label: "Verhandlung", tone: "violet" },
   won: { label: "Kunde gewonnen", tone: "green" },
@@ -49,7 +49,7 @@ export const DEAL_STAGES = {
   lead: { label: "Lead", probability: 10 },
   contacted: { label: "Kontaktiert", probability: 20 },
   interested: { label: "Interessiert", probability: 35 },
-  visit_scheduled: { label: "Besichtigung", probability: 50 },
+  visit_scheduled: { label: "Verkostung / Termin", probability: 50 },
   offer_sent: { label: "Angebot versendet", probability: 65 },
   negotiation: { label: "Verhandlung", probability: 80 },
   won: { label: "Gewonnen", probability: 100 },
@@ -94,7 +94,7 @@ export const TASK_TYPES = {
   call: "Anruf",
   follow_up: "Wiedervorlage",
   email: "E-Mail",
-  site_visit: "Besichtigung",
+  tasting: "Verkostung",
 } as const;
 
 export const OFFER_STATUS = {

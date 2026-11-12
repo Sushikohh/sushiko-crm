@@ -31,7 +31,7 @@ export const actionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("create_task"),
     title: z.string().min(1),
-    taskType: z.enum(["task", "call", "follow_up", "email", "site_visit"]).default("task"),
+    taskType: z.enum(["task", "call", "follow_up", "email", "tasting"]).default("task"),
     dueInDays: z.coerce.number().int().min(0).max(365).default(1),
     priority: z.enum(["low", "normal", "high"]).default("normal"),
   }),
@@ -61,7 +61,7 @@ export const DEFAULT_AUTOMATIONS: { name: string; description: string; trigger: 
       { type: "set_company_status", status: "interested" },
       { type: "set_contact_status", status: "interested" },
       { type: "ensure_deal", stage: "interested" },
-      { type: "create_task", title: "Interessenten zurückrufen und Besichtigung vereinbaren", taskType: "call", dueInDays: 1, priority: "high" },
+      { type: "create_task", title: "Interessenten zurückrufen: Anlass, Personenzahl und Termin klären, ggf. Verkostung anbieten", taskType: "call", dueInDays: 1, priority: "high" },
       { type: "notify", title: "Positive Antwort erhalten" },
     ],
   },
@@ -113,7 +113,7 @@ export const DEFAULT_AUTOMATIONS: { name: string; description: string; trigger: 
     conditions: { toStage: ["won"] },
     actions: [
       { type: "set_company_status", status: "won" },
-      { type: "notify", title: "Neuer Reinigungsvertrag gewonnen 🎉" },
+      { type: "notify", title: "Neuer Catering-Kunde gewonnen 🍣" },
     ],
   },
 ];
@@ -194,7 +194,7 @@ async function executeAction(action: AutomationAction, p: AutomationEventPayload
       const [deal] = await db
         .insert(schema.deals)
         .values({
-          title: `Unterhaltsreinigung ${company?.name ?? ""}`.trim(),
+          title: `Sushi-Catering ${company?.name ?? ""}`.trim(),
           companyId,
           contactId: p.contactId ?? null,
           stage: action.stage,

@@ -35,18 +35,18 @@ const T = (key: string, re: string) => `["${key}"~"^(${re})$"]`;
 
 /** Zuordnung Zielbranche → OSM-Tags. */
 export const OSM_FILTERS: Record<IndustryKey, string[]> = {
-  property_management: [T("office", "property_management|estate_agent|real_estate_agent|housing_association")],
-  office: [T("office", "company|it|insurance|lawyer|accountant|tax_advisor|consulting|financial|advertising_agency|architect|employment_agency|coworking|notary|engineer")],
-  medical: [T("amenity", "doctors|dentist|clinic"), T("healthcare", "doctor|dentist|clinic|physiotherapist|centre|laboratory")],
-  fitness: [T("leisure", "fitness_centre"), `["leisure"="sports_centre"]["sport"~"fitness|yoga|martial_arts"]`],
-  daycare: [T("amenity", "kindergarten|childcare")],
-  education: [T("amenity", "school|college|language_school|music_school|driving_school|training|university")],
-  retail: [T("shop", "supermarket|clothes|department_store|electronics|furniture|hardware|doityourself|chemist|optician|shoes|books|mall|beauty|hairdresser|car")],
-  hotel: [T("tourism", "hotel|hostel|guest_house|motel")],
-  business_park: [T("landuse", "commercial|industrial"), T("industrial", "business_park|commercial")],
-  logistics: [T("office", "logistics|courier|moving_company"), T("industrial", "logistics|warehouse")],
-  commercial_property: [T("building", "commercial|office|retail")],
-  other: [T("office", "association|company|ngo|foundation|government")],
+  office: [T("office", "company|insurance|financial|it|telecommunication|energy_supplier|logistics")],
+  agency: [T("office", "advertising_agency|marketing|graphic_design|newspaper|media|publisher|consulting_agency")],
+  event_agency: [T("office", "event_management|event_agency"), T("amenity", "events_venue|conference_centre|exhibition_centre")],
+  consulting: [T("office", "lawyer|notary|tax_advisor|accountant|consulting|financial_advisor|architect|engineer")],
+  tech: [T("office", "it|software|startup|research|engineering")],
+  coworking: [T("amenity", "coworking_space"), T("office", "coworking")],
+  hotel: [T("tourism", "hotel|guest_house"), T("amenity", "conference_centre")],
+  medical: [T("amenity", "doctors|dentist|clinic|hospital"), T("healthcare", "doctor|dentist|clinic|centre")],
+  education: [T("amenity", "university|college|language_school|training"), T("office", "educational_institution")],
+  fitness: [T("leisure", "fitness_centre"), T("amenity", "spa"), `["leisure"="sports_centre"]["sport"~"fitness|yoga"]`],
+  retail: [T("shop", "department_store|clothes|furniture|jewelry|car|interior_decoration|cosmetics|boutique")],
+  other: [T("office", "association|ngo|foundation|government|diplomatic")],
 };
 
 const escapeRe = (s: string) => s.replace(/["\\]/g, "").replace(/[.*+?^${}()|[\]]/g, "\\$&");
@@ -81,6 +81,7 @@ export function industryFromTags(tags: Record<string, string>, fallback: Industr
     }
   }
   if (tags.leisure === "sports_centre") return "fitness";
+  if (tags.office) return "office";
   return fallback;
 }
 
@@ -121,7 +122,7 @@ export function osmEnabled() {
 export async function searchOsm(q: FinderQuery): Promise<FinderResult[]> {
   if (!osmEnabled()) throw new Error("Datenquelle OpenStreetMap ist nicht aktiviert (FINDER_OSM_ENABLED=true).");
   const query = buildOverpassQuery(q);
-  const ua = `ReinigungsCRM/1.0 (${env.FINDER_CONTACT_EMAIL ?? env.APP_URL})`;
+  const ua = `SushikoCRM/1.0 (${env.FINDER_CONTACT_EMAIL ?? env.APP_URL})`;
   const res = await fetch(env.FINDER_OVERPASS_URL, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded", "user-agent": ua, accept: "application/json" },

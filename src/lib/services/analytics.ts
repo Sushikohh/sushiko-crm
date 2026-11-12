@@ -75,7 +75,10 @@ export type Kpis = {
   positiveReplies: number;
   visits: number;
   offersSent: number;
+  /** Angenommene Angebote (Catering-Aufträge) im Zeitraum */
   contractsWon: number;
+  /** Event-Umsatz netto aus angenommenen Angeboten im Zeitraum */
+  eventRevenue: number;
   mrr: number;
   annualValue: number;
   pipelineValue: number;
@@ -100,7 +103,8 @@ export async function getKpis(f: AnalyticsFilter): Promise<Kpis> {
       (select count(*) from email_messages m where m.direction='inbound' and m.ai_category in ('interested','meeting_request') and ${dateRange("m.received_at", f)} and ${messageScope(f)})::int as "positiveReplies",
       (select count(*) from appointments a where a.status <> 'cancelled' and ${dateRange("a.starts_at", f)} and ${companyScope(f, "a.company_id")})::int as "visits",
       (select count(*) from offers o where o.sent_at is not null and ${dateRange("o.sent_at", f)} and ${companyScope(f, "o.company_id")})::int as "offersSent",
-      (select count(*) from contracts k where ${dateRange("coalesce(k.signed_at, k.start_date::timestamptz)", f)} and ${companyScope(f, "k.company_id")})::int as "contractsWon",
+      (select count(*) from offers o where o.status = 'accepted' and ${dateRange("coalesce(o.decided_at, o.updated_at)", f)} and ${companyScope(f, "o.company_id")})::int as "contractsWon",
+      (select coalesce(sum(o.one_time_net),0) from offers o where o.status = 'accepted' and ${dateRange("coalesce(o.event_date, o.decided_at, o.updated_at)", f)} and ${companyScope(f, "o.company_id")})::float as "eventRevenue",
       (select coalesce(sum(k.monthly_value),0) from contracts k where k.status = 'active' and k.start_date <= current_date
         and (k.end_date is null or k.end_date >= current_date) and ${companyScope(f, "k.company_id")})::float as "mrr",
       (select coalesce(sum(d.monthly_value * d.probability / 100.0),0) from deals d where d.stage not in ('won','lost') and ${companyScope(f, "d.company_id")})::float as "pipelineValue"
@@ -118,6 +122,7 @@ export async function getKpis(f: AnalyticsFilter): Promise<Kpis> {
     visits: Number(r.visits),
     offersSent: Number(r.offersSent),
     contractsWon: Number(r.contractsWon),
+    eventRevenue: Number(r.eventRevenue),
     mrr,
     annualValue: mrr * 12,
     pipelineValue: Number(r.pipelineValue),
@@ -167,8 +172,8 @@ export async function getIndustryComparison(f: AnalyticsFilter) {
       count(*) filter (where exists (select 1 from email_messages m where m.company_id = co.id and m.direction='outbound' and m.status in ('accepted','delivered') and ${dateRange("m.sent_at", f)} and ${f.campaignId ? sql`m.campaign_id = ${f.campaignId}` : sql`true`}))::int as contacted,
       count(*) filter (where exists (select 1 from email_messages m where m.company_id = co.id and m.direction='inbound' and m.kind in ('reply','inbound') and ${dateRange("m.received_at", f)}))::int as replies,
       count(*) filter (where exists (select 1 from email_messages m where m.company_id = co.id and m.ai_category in ('interested','meeting_request') and ${dateRange("m.received_at", f)}))::int as positive,
-      count(*) filter (where exists (select 1 from contracts k where k.company_id = co.id))::int as won,
-      coalesce(sum((select sum(k.monthly_value) from contracts k where k.company_id = co.id and k.status='active')),0)::float as mrr
+      count(*) filter (where exists (select 1 from offers o where o.company_id = co.id and o.status = 'accepted'))::int as won,
+      coalesce(sum((select sum(o.one_time_net) from offers o where o.company_id = co.id and o.status = 'accepted' and ${dateRange("coalesce(o.event_date, o.decided_at)", f)})),0)::float as mrr
     from companies co where ${companyFilter(f)} and ${f.campaignId ? companyScope(f, "co.id") : sql`true`}
     group by co.industry order by companies desc`);
 }
@@ -183,29 +188,36 @@ export async function getFunnel(f: AnalyticsFilter) {
       (select count(distinct m.company_id) from email_messages m where m.company_id in (select id from fc) and m.ai_category in ('interested','meeting_request') and ${dateRange("m.received_at", f)})::int as positive,
       (select count(distinct a.company_id) from appointments a where a.company_id in (select id from fc) and a.status <> 'cancelled' and ${dateRange("a.starts_at", f)})::int as visits,
       (select count(distinct o.company_id) from offers o where o.company_id in (select id from fc) and o.sent_at is not null and ${dateRange("o.sent_at", f)})::int as offers,
-      (select count(distinct k.company_id) from contracts k where k.company_id in (select id from fc) and ${dateRange("coalesce(k.signed_at, k.start_date::timestamptz)", f)})::int as won`);
+      (select count(distinct o.company_id) from offers o where o.company_id in (select id from fc) and o.status = 'accepted' and ${dateRange("coalesce(o.decided_at, o.updated_at)", f)})::int as won`);
   return [
     { stage: "Recherchiert", value: r.researched },
     { stage: "Kontaktiert", value: r.contacted },
     { stage: "Geantwortet", value: r.replied },
     { stage: "Positiv", value: r.positive },
-    { stage: "Besichtigung", value: r.visits },
+    { stage: "Termin/Verkostung", value: r.visits },
     { stage: "Angebot", value: r.offers },
     { stage: "Gewonnen", value: r.won },
   ];
 }
 
+/** Monatsreihe: gewonnene Aufträge, Event-Umsatz (nach Eventdatum), Abo-Umsatz (Rahmenverträge) und Gesamtumsatz. */
 export async function getContractSeries(f: AnalyticsFilter) {
   const from = f.from ?? new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1);
   const to = f.to ?? new Date();
-  return db.execute<{ month: string; won: number; newMrr: number; mrr: number }>(sql`
+  return db.execute<{ month: string; won: number; eventRevenue: number; newMrr: number; mrr: number; revenue: number }>(sql`
     with months as (select generate_series(date_trunc('month', ${from.toISOString()}::timestamptz), date_trunc('month', ${to.toISOString()}::timestamptz), interval '1 month') as m),
-    k as (select * from contracts k where ${companyScope(f, "k.company_id")})
-    select to_char(m, 'YYYY-MM') as month,
-      (select count(*) from k where date_trunc('month', coalesce(k.signed_at, k.start_date::timestamptz)) = m)::int as won,
-      (select coalesce(sum(k.monthly_value),0) from k where date_trunc('month', k.start_date::timestamptz) = m)::float as "newMrr",
-      (select coalesce(sum(k.monthly_value),0) from k where k.start_date < (m + interval '1 month') and (k.end_date is null or k.end_date >= m) and k.status <> 'paused')::float as mrr
-    from months order by m`);
+    k as (select * from contracts k where ${companyScope(f, "k.company_id")}),
+    o as (select * from offers o where o.status = 'accepted' and ${companyScope(f, "o.company_id")}),
+    base as (
+      select m,
+        (select count(*) from o where date_trunc('month', coalesce(o.decided_at, o.updated_at)) = m)::int as won,
+        (select coalesce(sum(o.one_time_net),0) from o where date_trunc('month', coalesce(o.event_date, o.decided_at)) = m)::float as "eventRevenue",
+        (select coalesce(sum(k.monthly_value),0) from k where date_trunc('month', k.start_date::timestamptz) = m)::float as "newMrr",
+        (select coalesce(sum(k.monthly_value),0) from k where k.start_date < (m + interval '1 month') and (k.end_date is null or k.end_date >= m) and k.status <> 'paused')::float as mrr
+      from months
+    )
+    select to_char(m, 'YYYY-MM') as month, won, "eventRevenue", "newMrr", mrr, ("eventRevenue" + mrr)::float as revenue
+    from base order by m`);
 }
 
 export async function getCampaignComparison(f: AnalyticsFilter) {
@@ -233,7 +245,7 @@ export async function getOwnerPerformance(f: AnalyticsFilter) {
     select p.id, p.full_name as name,
       (select count(*) from companies co where co.owner_id = p.id and ${companyFilter({ ...f, ownerId: undefined })})::int as companies,
       (select count(*) from deals d where d.owner_id = p.id and d.stage not in ('won','lost'))::int as deals,
-      (select count(*) from contracts k where k.owner_id = p.id and ${dateRange("coalesce(k.signed_at, k.start_date::timestamptz)", f)})::int as won,
+      (select count(*) from offers o where o.owner_id = p.id and o.status = 'accepted' and ${dateRange("coalesce(o.decided_at, o.updated_at)", f)})::int as won,
       (select coalesce(sum(k.monthly_value),0) from contracts k where k.owner_id = p.id and k.status = 'active')::float as mrr
     from profiles p where p.active order by p.full_name`);
 }

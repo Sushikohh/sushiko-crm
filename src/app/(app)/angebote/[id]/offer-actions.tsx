@@ -18,7 +18,7 @@ export function OfferActions({ id, status }: { id: string; status: string }) {
     start(async () => {
       const r = await setOfferStatusAction(id, s, c);
       if (r.ok) {
-        toast.success(s === "accepted" ? "Angebot angenommen – Vertrag wurde angelegt" : "Status aktualisiert");
+        toast.success(s === "accepted" ? "Angebot angenommen – Auftrag erfasst" : "Status aktualisiert");
         router.refresh();
       } else toast.error(r.error);
     });
@@ -46,10 +46,10 @@ export function OfferActions({ id, status }: { id: string; status: string }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Angebot angenommen</DialogTitle>
-            <DialogDescription>Es wird automatisch ein Reinigungsvertrag mit dem monatlichen Angebotswert angelegt und der Deal als gewonnen markiert.</DialogDescription>
+            <DialogDescription>Der Deal wird als gewonnen markiert. Mit Eventdatum entsteht automatisch ein Liefertermin; wiederkehrende Positionen (Abo) werden als Rahmenvertrag angelegt.</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Vertragsbeginn">
+            <Field label="Abo-Beginn (falls wiederkehrend)">
               <Input type="date" value={contract.startDate} onChange={(e) => setContract({ ...contract, startDate: e.target.value })} />
             </Field>
             <Field label="Kündigungsfrist (Monate)">
@@ -64,7 +64,7 @@ export function OfferActions({ id, status }: { id: string; status: string }) {
                 set("accepted", { startDate: contract.startDate, noticePeriodMonths: Number(contract.noticePeriodMonths) });
               }}
             >
-              Vertrag anlegen
+              Annahme speichern
             </Button>
           </DialogFooter>
         </DialogContent>

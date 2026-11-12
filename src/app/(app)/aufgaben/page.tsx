@@ -63,7 +63,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader
         title="Aufgaben & Termine"
-        description="Wiedervorlagen, Rückrufe und Besichtigungstermine."
+        description="Wiedervorlagen, Rückrufe, Verkostungen und Event-Lieferungen."
         actions={
           <>
             <AppointmentDialog companies={companies} />

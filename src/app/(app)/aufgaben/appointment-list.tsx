@@ -12,7 +12,7 @@ import { setAppointmentStatusAction } from "@/server/actions/sales";
 
 export type ApptItem = { id: string; title: string; type: string; startsAt: string; endsAt: string | null; location: string | null; status: "planned" | "done" | "cancelled" | "no_show"; companyId: string | null; companyName: string | null; contactName: string | null; notes: string | null };
 
-const TYPE: Record<string, string> = { site_visit: "Besichtigung", meeting: "Gespräch", call: "Telefontermin", handover: "Objektübergabe" };
+const TYPE: Record<string, string> = { tasting: "Verkostung", meeting: "Gespräch", call: "Telefontermin", delivery: "Event / Lieferung" };
 const STATUS = { planned: { l: "Geplant", t: "blue" }, done: { l: "Durchgeführt", t: "green" }, cancelled: { l: "Abgesagt", t: "slate" }, no_show: { l: "Nicht erschienen", t: "amber" } } as const;
 
 export function AppointmentList({ items }: { items: ApptItem[] }) {
@@ -28,7 +28,7 @@ export function AppointmentList({ items }: { items: ApptItem[] }) {
   const set = (id: string, status: ApptItem["status"]) =>
     start(async () => {
       let outcome: string | undefined;
-      if (status === "done") outcome = window.prompt("Ergebnis der Besichtigung (optional):") ?? undefined;
+      if (status === "done") outcome = window.prompt("Ergebnis des Termins (optional):") ?? undefined;
       const r = await setAppointmentStatusAction(id, status, outcome);
       if (!r.ok) toast.error(r.error);
       router.refresh();

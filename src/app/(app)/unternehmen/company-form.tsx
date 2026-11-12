@@ -25,7 +25,7 @@ export type CompanyFormValues = {
   email: string;
   companySize: string;
   employeeCount: string;
-  areaSqm: string;
+  eventGuests: string;
   estimatedMonthlyValue: string;
   status: string;
   ownerId: string;
@@ -35,7 +35,7 @@ export type CompanyFormValues = {
 
 const empty: CompanyFormValues = {
   name: "", industry: "office", street: "", postalCode: "", city: "Hamburg", district: "", website: "", phone: "", email: "",
-  companySize: "", employeeCount: "", areaSqm: "", estimatedMonthlyValue: "", status: "new", ownerId: "", tags: "", notes: "",
+  companySize: "", employeeCount: "", eventGuests: "", estimatedMonthlyValue: "", status: "new", ownerId: "", tags: "", notes: "",
 };
 
 export function CompanyFormDialog({ initial, owners, trigger }: { initial?: Partial<CompanyFormValues>; owners: { id: string; name: string }[]; trigger?: React.ReactNode }) {
@@ -60,7 +60,7 @@ export function CompanyFormDialog({ initial, owners, trigger }: { initial?: Part
     email: v.email,
     companySize: v.companySize,
     employeeCount: v.employeeCount ? Number(v.employeeCount) : null,
-    areaSqm: v.areaSqm ? Number(v.areaSqm) : null,
+    eventGuests: v.eventGuests ? Number(v.eventGuests) : null,
     estimatedMonthlyValue: v.estimatedMonthlyValue ? Number(v.estimatedMonthlyValue.replace(",", ".")) : null,
     status: v.status,
     ownerId: v.ownerId || null,
@@ -187,11 +187,11 @@ export function CompanyFormDialog({ initial, owners, trigger }: { initial?: Part
           <Field label="Allgemeine E-Mail (geschäftlich)" error={errors.email} hint="Nur speichern, wenn rechtmäßig erhoben.">
             <Input value={v.email} onChange={on("email")} type="email" />
           </Field>
-          <Field label="Mitarbeiter">
+          <Field label="Mitarbeitende">
             <Input value={v.employeeCount} onChange={on("employeeCount")} inputMode="numeric" />
           </Field>
-          <Field label="Reinigungsfläche (m²)">
-            <Input value={v.areaSqm} onChange={on("areaSqm")} inputMode="numeric" />
+          <Field label="Typische Gästezahl bei Events">
+            <Input value={v.eventGuests} onChange={on("eventGuests")} inputMode="numeric" />
           </Field>
           <Field label="Geschätzter Monatswert (€ netto)">
             <Input value={v.estimatedMonthlyValue} onChange={on("estimatedMonthlyValue")} inputMode="decimal" />
@@ -207,7 +207,7 @@ export function CompanyFormDialog({ initial, owners, trigger }: { initial?: Part
             </NativeSelect>
           </Field>
           <Field label="Tags (kommagetrennt)" className="sm:col-span-2">
-            <Input value={v.tags} onChange={on("tags")} placeholder="z. B. Altona, Großobjekt" />
+            <Input value={v.tags} onChange={on("tags")} placeholder="z. B. Weihnachtsfeier, Lunch-Abo, Altona" />
           </Field>
           <Field label="Notizen" className="sm:col-span-2">
             <Textarea value={v.notes} onChange={on("notes")} rows={3} />

@@ -51,7 +51,7 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
               contactId={contact.id}
               companyId={company?.id}
               subject={`Angebot ${o.number}: ${o.title}`}
-              body={`Guten Tag ${contactName(contact)},\n\nwie besprochen erhalten Sie unser Angebot ${o.number} „${o.title}“:\n\n${items.map((it, i) => `${i + 1}. ${it.description}${it.frequency ? ` (${it.frequency})` : ""}: ${fmt.eur2(it.quantity * it.unitPrice)} ${it.unit === "monthly" ? "mtl." : "einmalig"}`).join("\n")}\n\nGesamt monatlich: ${fmt.eur2(monthly)} netto zzgl. ${Number(o.vatRate)} % USt.${o.validUntil ? `\nGültig bis: ${fmt.date(o.validUntil)}` : ""}\n\nBei Fragen melden Sie sich jederzeit.`}
+              body={`Guten Tag ${contactName(contact)},\n\nwie besprochen erhalten Sie unser Angebot ${o.number} „${o.title}“:\n\n${o.eventDate ? `Termin: ${fmt.dateTime(o.eventDate)}\n` : ""}${o.guestCount ? `Personen: ${o.guestCount}\n` : ""}\n${items.map((it, i) => `${i + 1}. ${it.quantity} × ${it.description}${it.frequency ? ` (${it.frequency})` : ""}: ${fmt.eur2(it.quantity * it.unitPrice)}${it.unit === "monthly" ? " mtl." : ""}`).join("\n")}\n\n${oneTime ? `Gesamt Event: ${fmt.eur2(oneTime)} netto zzgl. ${Number(o.vatRate)} % USt.` : ""}${monthly ? `\nAbo monatlich: ${fmt.eur2(monthly)} netto zzgl. ${Number(o.vatRate)} % USt.` : ""}${o.validUntil ? `\nGültig bis: ${fmt.date(o.validUntil)}` : ""}\n\nBei Fragen melden Sie sich jederzeit.`}
             />
           ) : null}
           <OfferActions id={o.id} status={o.status} />
@@ -87,6 +87,34 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
             <h2 className="mb-3 text-lg font-semibold">Angebot: {o.title}</h2>
+            {o.eventDate || o.guestCount || o.deliveryAddress || o.dietaryNotes ? (
+              <dl className="mb-5 grid grid-cols-[140px_1fr] gap-x-3 gap-y-1 rounded-lg bg-muted/40 p-3 text-sm">
+                {o.eventDate ? (
+                  <>
+                    <dt className="text-muted-foreground">Termin / Lieferung</dt>
+                    <dd>{fmt.dateTime(o.eventDate)} Uhr</dd>
+                  </>
+                ) : null}
+                {o.guestCount ? (
+                  <>
+                    <dt className="text-muted-foreground">Personen</dt>
+                    <dd>{fmt.num(o.guestCount)}</dd>
+                  </>
+                ) : null}
+                {o.deliveryAddress ? (
+                  <>
+                    <dt className="text-muted-foreground">Lieferadresse</dt>
+                    <dd>{o.deliveryAddress}</dd>
+                  </>
+                ) : null}
+                {o.dietaryNotes ? (
+                  <>
+                    <dt className="text-muted-foreground">Hinweise</dt>
+                    <dd>{o.dietaryNotes}</dd>
+                  </>
+                ) : null}
+              </dl>
+            ) : null}
             <p className="mb-2 text-sm">{contact ? `Sehr geehrte${contact.salutation === "Herr" ? "r Herr" : contact.salutation === "Frau" ? " Frau" : ""} ${contact.salutation === "Herr" || contact.salutation === "Frau" ? contact.lastName : "Damen und Herren"},` : "Sehr geehrte Damen und Herren,"}</p>
             {o.introText ? <p className="mb-6 text-sm whitespace-pre-wrap">{o.introText}</p> : null}
             <table className="mb-4 w-full text-sm">
@@ -94,7 +122,7 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
                 <tr className="border-b text-left text-xs text-muted-foreground">
                   <th className="py-2">Pos.</th>
                   <th className="py-2">Leistung</th>
-                  <th className="py-2">Turnus</th>
+                  <th className="py-2">Einheit</th>
                   <th className="py-2 text-right">Menge</th>
                   <th className="py-2 text-right">Einzelpreis</th>
                   <th className="py-2 text-right">Gesamt</th>
@@ -106,11 +134,11 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
                     <td className="py-2">{i + 1}</td>
                     <td className="py-2">
                       {it.description}
-                      {it.areaSqm ? <span className="block text-xs text-muted-foreground">{fmt.num(it.areaSqm)} m²</span> : null}
+                      {it.persons ? <span className="block text-xs text-muted-foreground">für {fmt.num(it.persons)} Personen</span> : null}
                     </td>
                     <td className="py-2 text-xs">
                       {it.frequency}
-                      <span className="block text-muted-foreground">{it.unit === "monthly" ? "monatlich" : "einmalig"}</span>
+                      <span className="block text-muted-foreground">{it.unit === "monthly" ? "monatlich (Abo)" : "pro Event"}</span>
                     </td>
                     <td className="py-2 text-right tabular-nums">{fmt.num(it.quantity)}</td>
                     <td className="py-2 text-right tabular-nums">{fmt.eur2(it.unitPrice)}</td>
@@ -120,23 +148,39 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
               </tbody>
             </table>
             <div className="ml-auto grid max-w-xs gap-1 text-sm">
-              <div className="flex justify-between">
-                <span>Monatlich netto</span>
-                <span className="tabular-nums">{fmt.eur2(monthly)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>zzgl. {Number(o.vatRate)} % USt.</span>
-                <span className="tabular-nums">{fmt.eur2(monthly * vat)}</span>
-              </div>
-              <div className="flex justify-between border-t pt-1 font-semibold">
-                <span>Monatlich brutto</span>
-                <span className="tabular-nums">{fmt.eur2(monthly * (1 + vat))}</span>
-              </div>
-              {oneTime ? (
-                <div className="mt-2 flex justify-between">
-                  <span>Einmalig netto</span>
-                  <span className="tabular-nums">{fmt.eur2(oneTime)}</span>
-                </div>
+              {oneTime || !monthly ? (
+                <>
+                  <div className="flex justify-between">
+                    <span>Summe netto</span>
+                    <span className="tabular-nums">{fmt.eur2(oneTime)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>zzgl. {Number(o.vatRate)} % USt.</span>
+                    <span className="tabular-nums">{fmt.eur2(oneTime * vat)}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1 font-semibold">
+                    <span>Gesamt brutto</span>
+                    <span className="tabular-nums">{fmt.eur2(oneTime * (1 + vat))}</span>
+                  </div>
+                  {o.guestCount ? (
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>entspricht pro Person (netto)</span>
+                      <span className="tabular-nums">{fmt.eur2(oneTime / o.guestCount)}</span>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+              {monthly ? (
+                <>
+                  <div className="mt-2 flex justify-between">
+                    <span>Abo monatlich netto</span>
+                    <span className="tabular-nums">{fmt.eur2(monthly)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Abo monatlich brutto</span>
+                    <span className="tabular-nums">{fmt.eur2(monthly * (1 + vat))}</span>
+                  </div>
+                </>
               ) : null}
             </div>
             {o.terms ? <p className="mt-8 text-xs whitespace-pre-wrap text-muted-foreground">{o.terms}</p> : null}
@@ -161,9 +205,13 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
               companyId: o.companyId,
               contactId: o.contactId ?? "",
               dealId: o.dealId ?? "",
-              items: items.map((i) => ({ description: i.description, areaSqm: i.areaSqm?.toString() ?? "", frequency: i.frequency, unit: i.unit, quantity: String(i.quantity), unitPrice: String(i.unitPrice) })),
+              items: items.map((i) => ({ description: i.description, persons: i.persons?.toString() ?? "", frequency: i.frequency, unit: i.unit, quantity: String(i.quantity), unitPrice: String(i.unitPrice) })),
               vatRate: String(Number(o.vatRate)),
               validUntil: o.validUntil ?? "",
+              eventDate: o.eventDate ? new Date(o.eventDate.getTime() - o.eventDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "",
+              guestCount: o.guestCount?.toString() ?? "",
+              deliveryAddress: o.deliveryAddress ?? "",
+              dietaryNotes: o.dietaryNotes ?? "",
               introText: o.introText ?? "",
               terms: o.terms ?? "",
             }}

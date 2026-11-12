@@ -44,7 +44,7 @@ export function PipelineBoard({ deals: initial, highlight }: { deals: BoardDeal[
       });
       toast.error(r.error);
     } else {
-      if (stage === "won") toast.success("Deal gewonnen – Vertrag über „Angebote & Verträge“ erfassen.");
+      if (stage === "won") toast.success("Deal gewonnen – Angebot als angenommen markieren, damit der Auftrag erfasst wird.");
       router.refresh();
     }
   };

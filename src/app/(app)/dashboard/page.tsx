@@ -43,7 +43,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <PageHeader title={`Guten Tag, ${user.fullName.split(" ")[0]}`} description="Überblick über Akquise, Kommunikation und Vertragsabschlüsse." />
+      <PageHeader title={`Guten Tag, ${user.fullName.split(" ")[0]}`} description="Überblick über Akquise, Anfragen und Catering-Aufträge." />
       <SetupChecklist />
       <AnalyticsFilterBar campaigns={campaigns} owners={owners} />
 
@@ -56,12 +56,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Kpi label="Unzustellbar" value={fmt.num(kpis.bounced)} icon={MailX} hint={`Bounce-Rate ${rate(kpis.bounced, kpis.sent)}`} />
         <Kpi label="Antworten" value={fmt.num(kpis.replies)} icon={Inbox} hint={`Antwortquote ${rate(kpis.replies, kpis.accepted)}`} href="/postfach" />
         <Kpi label="Positive Antworten" value={fmt.num(kpis.positiveReplies)} icon={ThumbsUp} hint={rate(kpis.positiveReplies, kpis.accepted)} />
-        <Kpi label="Besichtigungstermine" value={fmt.num(kpis.visits)} icon={CalendarCheck} href="/aufgaben?tab=termine" />
+        <Kpi label="Verkostungen & Termine" value={fmt.num(kpis.visits)} icon={CalendarCheck} href="/aufgaben?tab=termine" />
         <Kpi label="Versendete Angebote" value={fmt.num(kpis.offersSent)} icon={FileText} href="/angebote" />
-        <Kpi label="Gewonnene Verträge" value={fmt.num(kpis.contractsWon)} icon={Trophy} href="/angebote?tab=vertraege" />
-        <Kpi label="Monatsumsatz (aktiv)" value={fmt.eur(kpis.mrr)} icon={CheckCircle2} hint="laufende Verträge, netto" />
-        <Kpi label="Jahresvertragswert" value={fmt.eur(kpis.annualValue)} icon={Trophy} hint="Monatsumsatz × 12" />
-        <Kpi label="Gewichtete Pipeline" value={fmt.eur(kpis.pipelineValue)} icon={ArrowRight} hint="monatlich, nach Wahrscheinlichkeit" href="/pipeline" />
+        <Kpi label="Gewonnene Aufträge" value={fmt.num(kpis.contractsWon)} icon={Trophy} hint="angenommene Angebote" href="/angebote" />
+        <Kpi label="Event-Umsatz" value={fmt.eur(kpis.eventRevenue)} icon={CheckCircle2} hint="netto, angenommene Angebote" />
+        <Kpi label="Abo-Umsatz monatlich" value={fmt.eur(kpis.mrr)} icon={CheckCircle2} hint="Rahmenverträge (z. B. Lunch), netto" />
+        <Kpi label="Abo-Jahreswert" value={fmt.eur(kpis.annualValue)} icon={Trophy} hint="Abo-Umsatz × 12" />
+        <Kpi label="Gewichtete Pipeline" value={fmt.eur(kpis.pipelineValue)} icon={ArrowRight} hint="Auftragswert nach Wahrscheinlichkeit" href="/pipeline" />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -103,23 +104,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           empty="Noch keine Antworten nach Branche."
         />
         <ChartCard
-          title="Vertragsabschlüsse nach Monat"
+          title="Gewonnene Aufträge nach Monat"
           kind="bar"
           xLabel="Monat"
           data={contracts}
           xKey="month"
-          series={[{ key: "won", label: "Neue Verträge", color: "var(--chart-1)" }]}
-          empty="Noch keine Verträge erfasst."
+          series={[{ key: "won", label: "Aufträge", color: "var(--chart-1)" }]}
+          empty="Noch keine Aufträge gewonnen."
         />
         <ChartCard
           title="Umsatzentwicklung"
-          description="Monatlicher Vertragsumsatz (netto) laufender Verträge"
+          description="Event-Umsatz (nach Eventmonat) plus Abo-Umsatz, netto"
           kind="area"
           xLabel="Monat"
           data={contracts}
           xKey="month"
-          series={[{ key: "mrr", label: "Monatsumsatz", color: "var(--chart-3)", format: "eur" }]}
-          empty="Noch kein Umsatz aus Verträgen."
+          series={[{ key: "revenue", label: "Umsatz", color: "var(--chart-3)", format: "eur" }]}
+          empty="Noch kein Umsatz erfasst."
         />
       </div>
     </>

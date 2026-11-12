@@ -6,8 +6,8 @@ import { THEME_INIT_SCRIPT } from "@/components/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Akquise-CRM", template: "%s · Akquise-CRM" },
-  description: "B2B-Akquise und CRM für Gebäudereinigung in Hamburg",
+  title: { default: "Sushiko CRM", template: "%s · Sushiko CRM" },
+  description: "B2B-Akquise und CRM für Sushi-Catering in Hamburg",
   robots: { index: false, follow: false },
 };
 

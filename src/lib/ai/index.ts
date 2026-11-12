@@ -106,12 +106,12 @@ export const replyAnalysisSchema = z.object({
 });
 export type ReplyAnalysis = z.infer<typeof replyAnalysisSchema>;
 
-const ANALYSIS_SYSTEM = `Du analysierst eingehende E-Mail-Antworten für den B2B-Vertrieb einer Gebäudereinigungsfirma in Hamburg.
+const ANALYSIS_SYSTEM = `Du analysierst eingehende E-Mail-Antworten für den B2B-Vertrieb eines Sushi-Catering-Unternehmens in Hamburg (Firmenevents, Meetings, Team-Lunches).
 Ordne die Antwort genau einer Kategorie zu:
-- interested: grundsätzliches Interesse, möchte Informationen/Angebot
-- meeting_request: wünscht Besichtigung, Termin oder Rückruf
+- interested: grundsätzliches Interesse, möchte Informationen, Speisekarte oder ein Angebot (z. B. für ein Event)
+- meeting_request: nennt einen konkreten Event-/Liefertermin, wünscht Verkostung, Gespräch oder Rückruf
 - question: stellt eine inhaltliche Rückfrage ohne klare Interessensbekundung
-- later: aktuell kein Bedarf, aber später erneut melden (z. B. Vertrag läuft noch)
+- later: aktuell kein Bedarf, aber später erneut melden (z. B. nächste Weihnachtsfeier, anderer Caterer gebucht)
 - not_interested: kein Interesse
 - unsubscribe: möchte keine weiteren E-Mails / widerspricht Werbung / Datenlöschung
 - out_of_office: Abwesenheitsnotiz
@@ -153,9 +153,9 @@ export const emailDraftSchema = z.object({
 });
 export type EmailDraft = z.infer<typeof emailDraftSchema>;
 
-const WRITER_SYSTEM = `Du schreibst geschäftliche E-Mails auf Deutsch für eine neu gegründete Gebäudereinigungsfirma in Hamburg.
-Stil: sachlich, freundlich, konkret, kurz (max. 150 Wörter), Sie-Form, keine Übertreibungen, keine erfundenen Referenzen,
-Zahlen, Zertifikate oder Rabatte. Keine Signatur und kein Impressum anhängen – das ergänzt das System.`;
+const WRITER_SYSTEM = `Du schreibst geschäftliche E-Mails auf Deutsch für Sushiko, ein Sushi-Catering für Firmenkunden in Hamburg.
+Stil: herzlich, professionell, konkret, kurz (max. 150 Wörter), Sie-Form, keine Übertreibungen, keine erfundenen Referenzen,
+Preise, Gerichte, Zertifikate oder Rabatte. Keine Signatur und kein Impressum anhängen – das ergänzt das System.`;
 
 export async function personalizeEmail(input: {
   subject: string;
@@ -190,7 +190,7 @@ export async function draftReply(input: {
   const prompt = `Verfasse eine Antwort auf die letzte Nachricht im Verlauf im Namen von ${input.senderName}.
 ${input.analysis ? `Einordnung: ${input.analysis.category} – ${input.analysis.summary}` : ""}
 ${input.instructions ? `Zusätzliche Hinweise: ${input.instructions}` : ""}
-Wenn ein Termin gewünscht ist, schlage vor, eine kostenlose Besichtigung zu vereinbaren, und frage nach passenden Zeitfenstern.
+Wenn ein Event oder eine Bestellung angefragt wird, bestätige freundlich und frage gezielt nach fehlenden Angaben: Datum, Uhrzeit, Personenzahl, Lieferadresse, vegetarische/vegane Wünsche und Allergien. Nenne keine Preise, die nicht im Verlauf stehen.
 Wenn die Person keine E-Mails mehr wünscht, bestätige nur kurz und höflich die Abmeldung.
 
 ${history}`;

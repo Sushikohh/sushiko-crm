@@ -109,7 +109,7 @@ export function TaskDialog({ companyId = "", contactId = "", dealId = "", compan
           }}
         >
           <Field label="Titel">
-            <Input value={v.title} onChange={on("title")} required autoFocus placeholder="z. B. Rückruf wegen Besichtigung" />
+            <Input value={v.title} onChange={on("title")} required autoFocus placeholder="z. B. Rückruf wegen Weihnachtsfeier" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Art">
@@ -163,7 +163,7 @@ export function AppointmentDialog({ companyId = "", contactId = "", dealId = "",
   const [v, setV] = React.useState(() => {
     const start = new Date(Date.now() + 2 * 86400_000);
     start.setHours(10, 0, 0, 0);
-    return { title: "Besichtigung", type: "site_visit", startsAt: toLocalInput(start), endsAt: toLocalInput(new Date(start.getTime() + 3600_000)), location, notes: "", companyId, contactId };
+    return { title: "Verkostung", type: "tasting", startsAt: toLocalInput(start), endsAt: toLocalInput(new Date(start.getTime() + 3600_000)), location, notes: "", companyId, contactId };
   });
   const on = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setV((s) => ({ ...s, [k]: e.target.value }));
   return (
@@ -183,7 +183,7 @@ export function AppointmentDialog({ companyId = "", contactId = "", dealId = "",
           className="grid gap-3"
           onSubmit={(e) => {
             e.preventDefault();
-            d.submit(() => saveAppointmentAction(null, { ...v, dealId: dealId || null, companyId: v.companyId || null, contactId: v.contactId || null }), "Termin gespeichert");
+            d.submit(() => saveAppointmentAction(null, { ...v, type: v.type as "tasting" | "meeting" | "call" | "delivery", dealId: dealId || null, companyId: v.companyId || null, contactId: v.contactId || null }), "Termin gespeichert");
           }}
         >
           <div className="grid grid-cols-2 gap-3">
@@ -192,10 +192,10 @@ export function AppointmentDialog({ companyId = "", contactId = "", dealId = "",
             </Field>
             <Field label="Art">
               <NativeSelect value={v.type} onChange={on("type")}>
-                <option value="site_visit">Besichtigung</option>
+                <option value="tasting">Verkostung</option>
                 <option value="meeting">Gespräch</option>
                 <option value="call">Telefontermin</option>
-                <option value="handover">Objektübergabe</option>
+                <option value="delivery">Event / Lieferung</option>
               </NativeSelect>
             </Field>
             <Field label="Beginn">
@@ -263,7 +263,7 @@ export function DealDialog({ initial, companies, contacts, owners, trigger }: { 
           }}
         >
           <Field label="Titel">
-            <Input value={v.title} onChange={on("title")} required placeholder="z. B. Unterhaltsreinigung Büroetage" />
+            <Input value={v.title} onChange={on("title")} required placeholder="z. B. Weihnachtsfeier 80 Personen" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <CompanyContactFields companies={companies} contacts={contacts} companyId={v.companyId} contactId={v.contactId} onCompany={(x) => setV((s) => ({ ...s, companyId: x }))} onContact={(x) => setV((s) => ({ ...s, contactId: x }))} />

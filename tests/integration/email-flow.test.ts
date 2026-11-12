@@ -65,7 +65,7 @@ beforeAll(async () => {
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", () => r()));
   port = (server.server.address() as { port: number }).port;
 
-  await setSetting("sender_identity", { companyName: "Glanz Gebäudeservice", legalForm: "GmbH", street: "Hafenstraße 1", postalCode: "20459", city: "Hamburg", phone: "040 123", email: "info@glanz-test.de" });
+  await setSetting("sender_identity", { companyName: "Sushiko Hamburg", legalForm: "GmbH", street: "Hafenstraße 1", postalCode: "20459", city: "Hamburg", phone: "040 123", email: "info@glanz-test.de" });
   await db.insert(schema.mailboxes).values({
     name: "Test",
     email: "info@glanz-test.de",
@@ -90,9 +90,9 @@ describe("Kampagne → Versand → Antwort → Abmeldung", () => {
   const ids: Record<string, string> = {};
 
   it("legt Firma und Kontakte an; Werbeerlaubnis getrennt vom Status", async () => {
-    const co = await createCompany({ name: "Alster Hausverwaltung GmbH", industry: "property_management", postalCode: "20095", website: "alster-hv.de" }, null);
+    const co = await createCompany({ name: "Alster Werbung GmbH", industry: "agency", postalCode: "20095", website: "alster-hv.de", employeeCount: 60 }, null);
     ids.company = co.id;
-    const a = await createContact({ companyId: co.id, salutation: "Frau", firstName: "Anna", lastName: "Alster", email: "anna@alster-hv.de", position: "Geschäftsführerin" }, null);
+    const a = await createContact({ companyId: co.id, salutation: "Frau", firstName: "Anna", lastName: "Alster", email: "anna@alster-hv.de", position: "Office Managerin" }, null);
     const b = await createContact({ companyId: co.id, firstName: "Bernd", lastName: "Ohne", email: "bernd@alster-hv.de" }, null);
     const c = await createContact({ companyId: co.id, firstName: "Carla", lastName: "Falsch", email: "unbekannt@alster-hv.de" }, null);
     Object.assign(ids, { anna: a.id, bernd: b.id, carla: c.id });
@@ -112,8 +112,8 @@ describe("Kampagne → Versand → Antwort → Abmeldung", () => {
         sendWeekdaysOnly: false,
         minDelaySeconds: 10,
         steps: [
-          { delayDays: 0, subject: "Reinigung für {{firma}}", body: "{{anrede}},\n\nwir möchten Ihnen unser Angebot vorstellen.\n\nViele Grüße" },
-          { delayDays: 5, subject: "Re: Reinigung für {{firma}}", body: "{{anrede}},\n\nkurze Nachfrage." },
+          { delayDays: 0, subject: "Sushi für {{firma}}", body: "{{anrede}},\n\nwir möchten Ihnen unser Angebot vorstellen.\n\nViele Grüße" },
+          { delayDays: 5, subject: "Re: Sushi für {{firma}}", body: "{{anrede}},\n\nkurze Nachfrage." },
         ],
       },
       (await db.insert(schema.profiles).values({ email: "chef@glanz-test.de", fullName: "Chef" }).returning())[0].id,
@@ -137,9 +137,9 @@ describe("Kampagne → Versand → Antwort → Abmeldung", () => {
 
     expect(received).toHaveLength(1);
     const mail = received[0];
-    expect(mail.subject).toBe("Reinigung für Alster Hausverwaltung GmbH");
+    expect(mail.subject).toBe("Sushi für Alster Werbung GmbH");
     expect(mail.text).toContain("Sehr geehrte Frau Alster");
-    expect(mail.text).toContain("Glanz Gebäudeservice GmbH");
+    expect(mail.text).toContain("Sushiko Hamburg GmbH");
     expect(mail.text).toContain("https://crm.example.test/u/");
     const lu = mail.headerLines.find((h) => h.key === "list-unsubscribe")?.line ?? "";
     expect(lu).toContain("https://crm.example.test/u/");
@@ -203,7 +203,7 @@ describe("Kampagne → Versand → Antwort → Abmeldung", () => {
 
   it("erkennt Abmeldung per E-Mail auch ohne KI und sperrt die Adresse", async () => {
     const [mb] = await db.select().from(schema.mailboxes);
-    const raw = `From: Anna Alster <anna@alster-hv.de>\r\nTo: info@glanz-test.de\r\nSubject: Re: Reinigung\r\nMessage-ID: <reply-2@alster-hv.de>\r\nIn-Reply-To: <reply-1@alster-hv.de>\r\n\r\nBitte senden Sie mir keine weiteren E-Mails.\r\n`;
+    const raw = `From: Anna Alster <anna@alster-hv.de>\r\nTo: info@glanz-test.de\r\nSubject: Re: Sushi\r\nMessage-ID: <reply-2@alster-hv.de>\r\nIn-Reply-To: <reply-1@alster-hv.de>\r\n\r\nBitte senden Sie mir keine weiteren E-Mails.\r\n`;
     const r = await ingestInbound(mb.id, toParsedInbound(await simpleParser(raw)), 102);
     const a = await analyzeMessageJob(r!.id);
     expect(a).toMatchObject({ category: "unsubscribe", objection: true });
@@ -219,7 +219,7 @@ describe("Kampagne → Versand → Antwort → Abmeldung", () => {
     const ct = await createContact({ companyId: co.id, firstName: "Dirk", email: "dirk@fitness-nord.de" }, null);
     const [out] = await db
       .insert(schema.emailMessages)
-      .values({ direction: "outbound", kind: "correspondence", status: "accepted", mailboxId: mb.id, contactId: ct.id, companyId: co.id, fromEmail: mb.email, toEmails: ["dirk@fitness-nord.de"], subject: "Termin", messageIdHeader: "<out-77@glanz-test.de>", sentAt: new Date() })
+      .values({ direction: "outbound", kind: "correspondence", status: "accepted", mailboxId: mb.id, contactId: ct.id, companyId: co.id, fromEmail: mb.email, toEmails: ["dirk@fitness-nord.de"], subject: "Lieferung", messageIdHeader: "<out-77@glanz-test.de>", sentAt: new Date() })
       .returning();
     const dsn = `From: MAILER-DAEMON@mx.fitness-nord.de\r\nTo: info@glanz-test.de\r\nSubject: Undelivered Mail Returned to Sender\r\nMessage-ID: <dsn-77@mx>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/report; report-type=delivery-status; boundary="B"\r\n\r\n--B\r\nContent-Type: text/plain\r\n\r\nfailed\r\n--B\r\nContent-Type: message/delivery-status\r\n\r\nFinal-Recipient: rfc822; dirk@fitness-nord.de\r\nStatus: 5.1.1\r\n\r\n--B\r\nContent-Type: text/rfc822-headers\r\n\r\nMessage-ID: <out-77@glanz-test.de>\r\n\r\n--B--\r\n`;
     const r = await ingestInbound(mb.id, toParsedInbound(await simpleParser(dsn)), 103);

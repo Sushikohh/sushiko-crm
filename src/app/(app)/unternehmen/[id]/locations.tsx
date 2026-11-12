@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, Input } from "@/components/ui/primitives";
 import { addLocationAction, deleteLocationAction } from "@/server/actions/companies";
 
-type Loc = { id: string; label: string; street: string | null; postalCode: string | null; city: string | null; district: string | null; areaSqm: number | null };
+type Loc = { id: string; label: string; street: string | null; postalCode: string | null; city: string | null; district: string | null; headcount: number | null };
 
 export function LocationsCard({ companyId, main, locations }: { companyId: string; main: { street: string | null; postalCode: string | null; city: string | null; district: string | null }; locations: Loc[] }) {
-  const [v, setV] = React.useState({ label: "", street: "", postalCode: "", city: "Hamburg", district: "", areaSqm: "" });
+  const [v, setV] = React.useState({ label: "", street: "", postalCode: "", city: "Hamburg", district: "", headcount: "" });
   const [pending, start] = React.useTransition();
   const router = useRouter();
   const line = (l: { street: string | null; postalCode: string | null; city: string | null; district: string | null }) =>
@@ -36,7 +36,7 @@ export function LocationsCard({ companyId, main, locations }: { companyId: strin
               <p className="font-medium">{l.label}</p>
               <p className="text-xs text-muted-foreground">
                 {line(l)}
-                {l.areaSqm ? ` · ${l.areaSqm.toLocaleString("de-DE")} m²` : ""}
+                {l.headcount ? ` · ${l.headcount.toLocaleString("de-DE")} Mitarbeitende` : ""}
               </p>
             </div>
             <Button
@@ -59,9 +59,9 @@ export function LocationsCard({ companyId, main, locations }: { companyId: strin
           onSubmit={(e) => {
             e.preventDefault();
             start(async () => {
-              const r = await addLocationAction(companyId, { ...v, areaSqm: v.areaSqm ? Number(v.areaSqm) : null });
+              const r = await addLocationAction(companyId, { ...v, headcount: v.headcount ? Number(v.headcount) : null });
               if (r.ok) {
-                setV({ label: "", street: "", postalCode: "", city: "Hamburg", district: "", areaSqm: "" });
+                setV({ label: "", street: "", postalCode: "", city: "Hamburg", district: "", headcount: "" });
                 router.refresh();
               } else toast.error(r.error);
             });
@@ -70,7 +70,7 @@ export function LocationsCard({ companyId, main, locations }: { companyId: strin
           <Input className="sm:col-span-2" placeholder="Bezeichnung (z. B. Filiale Altona)" value={v.label} onChange={(e) => setV({ ...v, label: e.target.value })} required />
           <Input className="sm:col-span-2" placeholder="Straße" value={v.street} onChange={(e) => setV({ ...v, street: e.target.value })} />
           <Input placeholder="PLZ" value={v.postalCode} onChange={(e) => setV({ ...v, postalCode: e.target.value })} />
-          <Input placeholder="m²" value={v.areaSqm} onChange={(e) => setV({ ...v, areaSqm: e.target.value })} inputMode="numeric" />
+          <Input placeholder="Mitarb." value={v.headcount} onChange={(e) => setV({ ...v, headcount: e.target.value })} inputMode="numeric" />
           <Input className="sm:col-span-2" placeholder="Stadtteil" value={v.district} onChange={(e) => setV({ ...v, district: e.target.value })} />
           <Input className="sm:col-span-2" placeholder="Ort" value={v.city} onChange={(e) => setV({ ...v, city: e.target.value })} />
           <Button type="submit" size="sm" variant="outline" className="sm:col-span-2" disabled={pending}>

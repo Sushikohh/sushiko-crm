@@ -51,7 +51,7 @@ export function TaskList({ tasks, empty = "Keine Aufgaben." }: { tasks: TaskItem
             <div className="min-w-0 flex-1">
               <p className={cn("text-sm font-medium", t.completedAt && "text-muted-foreground line-through")}>{t.title}</p>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <Badge tone={t.type === "call" ? "blue" : t.type === "follow_up" ? "amber" : t.type === "site_visit" ? "violet" : "slate"}>{TASK_TYPES[t.type]}</Badge>
+                <Badge tone={t.type === "call" ? "blue" : t.type === "follow_up" ? "amber" : t.type === "tasting" ? "violet" : "slate"}>{TASK_TYPES[t.type]}</Badge>
                 {t.priority === "high" ? <Badge tone="red">Hoch</Badge> : null}
                 <span className={cn(overdue && "font-medium text-red-600 dark:text-red-400")}>{t.dueAt ? `fällig ${fmt.dateTime(t.dueAt)}` : "ohne Termin"}</span>
                 {t.companyName && t.companyId ? (

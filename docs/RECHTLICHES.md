@@ -24,7 +24,17 @@ Werbung per E-Mail braucht in Deutschland auch gegenüber Unternehmen eine **vor
 ## Empfohlene Wege zur Einwilligung
 
 - Kontaktformular auf Ihrer Website mit separater, nicht vorausgewählter Checkbox für Informationen per E-Mail, idealerweise mit Double-Opt-in im Newsletter-System und Import per CSV mit Nachweis.
-- Persönlicher Kontakt (Messe, Telefonat auf Anfrage des Kunden, Besichtigung) mit dokumentierter Einwilligung.
+- Persönlicher Kontakt (Messe, Verkostung, Event, auf dem Lieferschein/der Rechnung) mit dokumentierter Einwilligung.
+- Bestellformular / Angebotsanfrage auf Ihrer Website mit separater Checkbox für Angebote per E-Mail.
 - Bestandskunden: Hinweis auf das Widerspruchsrecht bei Vertragsschluss und in jeder E-Mail.
 
 Für die Erstansprache ohne Einwilligung bleiben persönliche Kanäle wie Telefon (nur bei mutmaßlicher Einwilligung, § 7 Abs. 2 Nr. 1 UWG), Brief oder Besuch. Für diese Fälle gibt es Aufgaben, Termine und Notizen.
+
+## Hinweis für Sushiko (Catering)
+
+Ihre wertvollste rechtssichere Zielgruppe sind **Bestandskunden**: Wer bei Ihnen schon bestellt hat, darf nach § 7 Abs. 3 UWG per E-Mail auf *ähnliche eigene Leistungen* hingewiesen werden (z. B. Weihnachtsfeier-Angebot nach einem Sommerfest-Catering). Das gilt nur, wenn
+- die Adresse im Zusammenhang mit der Bestellung erhoben wurde,
+- der Kunde schon bei der Erhebung klar auf sein Widerspruchsrecht hingewiesen wurde (z. B. auf Bestellbestätigung oder Rechnung) und nicht widersprochen hat und
+- jede E-Mail einen Hinweis zur Abmeldung enthält (macht die Software automatisch).
+
+In der Software: beim Ansprechpartner „Bestandskunde (§ 7 Abs. 3 UWG)“ wählen und im Nachweis Bestelldatum und Ort des Widerspruchshinweises eintragen.

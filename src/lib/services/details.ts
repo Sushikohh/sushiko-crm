@@ -33,7 +33,7 @@ export async function getCompanyDetail(id: string) {
   const score = scoreCompany({
     industry: company.industry,
     employeeCount: company.employeeCount,
-    areaSqm: company.areaSqm,
+    eventGuests: company.eventGuests,
     companySize: company.companySize,
     hasWebsite: !!company.website,
     hasPhone: !!company.phone,

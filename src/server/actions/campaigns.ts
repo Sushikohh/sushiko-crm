@@ -104,8 +104,8 @@ export async function previewStepAction(subject: string, body: string, contactId
   return run(async () => {
     const identity = await getSetting("sender_identity");
     const mailbox = await getDefaultMailbox();
-    let contact = { salutation: "Frau", firstName: "Erika", lastName: "Musterfrau", position: "Objektleitung" } as { salutation: string | null; firstName: string; lastName: string; position: string | null };
-    let company = { name: "Beispiel Immobilien GmbH", district: "Altona", city: "Hamburg", industry: "property_management" as string | null };
+    let contact = { salutation: "Frau", firstName: "Erika", lastName: "Musterfrau", position: "Office Managerin" } as { salutation: string | null; firstName: string; lastName: string; position: string | null };
+    let company = { name: "Beispiel Agentur GmbH", district: "Altona", city: "Hamburg", industry: "agency" as string | null };
     let example = true;
     if (contactId) {
       const [row] = await db

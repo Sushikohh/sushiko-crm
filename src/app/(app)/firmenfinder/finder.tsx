@@ -11,7 +11,7 @@ import { HAMBURG_DISTRICTS, INDUSTRIES, type IndustryKey } from "@/lib/constants
 import { importFinderAction, searchFinderAction, type FinderHit } from "@/server/actions/finder";
 
 export function Finder() {
-  const [q, setQ] = React.useState({ industry: "property_management", name: "", quarter: "", postalCode: "", limit: "150" });
+  const [q, setQ] = React.useState({ industry: "agency", name: "", quarter: "", postalCode: "", limit: "150" });
   const [hits, setHits] = React.useState<FinderHit[] | null>(null);
   const [sel, setSel] = React.useState<Set<string>>(new Set());
   const [searching, startSearch] = React.useTransition();

@@ -26,14 +26,23 @@ export default async function NewOfferPage({ searchParams }: { searchParams: Pro
         contacts={contacts}
         deals={deals}
         initial={{
-          title: companyName ? `Unterhaltsreinigung ${companyName}` : "",
+          title: companyName ? `Sushi-Catering ${companyName}` : "Sushi-Catering",
           companyId: company ?? "",
           contactId: "",
           dealId: deal ?? deals.find((d) => d.companyId === company)?.id ?? "",
-          items: [{ description: "Unterhaltsreinigung Büro- und Sozialräume", areaSqm: "", frequency: "5× wöchentlich", unit: "monthly", quantity: "1", unitPrice: "" }],
-          vatRate: "19",
+          // Preise bewusst leer: Ihre Preisliste in den Positionen eintragen
+          items: [
+            { description: "Sushi-Mix-Platte (Maki, Inside-Out, Nigiri)", persons: "", frequency: "Platte", unit: "one_time", quantity: "1", unitPrice: "" },
+            { description: "Vegetarische / vegane Platte", persons: "", frequency: "Platte", unit: "one_time", quantity: "1", unitPrice: "" },
+            { description: "Lieferung inkl. Sojasauce, Wasabi, Ingwer, Stäbchen", persons: "", frequency: "pauschal", unit: "one_time", quantity: "1", unitPrice: "" },
+          ],
+          vatRate: "7",
+          eventDate: "",
+          guestCount: "",
+          deliveryAddress: "",
+          dietaryNotes: "",
           validUntil,
-          introText: `vielen Dank für das freundliche Gespräch und die Möglichkeit zur Besichtigung. Gern unterbreiten wir Ihnen folgendes Angebot.`,
+          introText: `vielen Dank für Ihre Anfrage. Gern unterbreiten wir Ihnen folgendes Angebot für Ihr Sushi-Catering.`,
           terms: DEFAULT_TERMS,
         }}
       />

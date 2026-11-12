@@ -31,8 +31,8 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
     { label: "Bounce-Rate", value: rate(kpis.bounced, kpis.sent), hint: "unzustellbar / versendet" },
     { label: "Antwortquote", value: rate(kpis.replies, kpis.accepted), hint: "Antworten / angenommen" },
     { label: "Positive Quote", value: rate(kpis.positiveReplies, kpis.accepted), hint: "positiv / angenommen" },
-    { label: "Besichtigung → Angebot", value: rate(kpis.offersSent, kpis.visits), hint: "Angebote / Termine" },
-    { label: "Angebot → Vertrag", value: rate(kpis.contractsWon, kpis.offersSent), hint: "Abschlussquote" },
+    { label: "Termin → Angebot", value: rate(kpis.offersSent, kpis.visits), hint: "Angebote / Termine" },
+    { label: "Angebot → Auftrag", value: rate(kpis.contractsWon, kpis.offersSent), hint: "Abschlussquote" },
   ];
   return (
     <>
@@ -83,14 +83,14 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           height={Math.max(180, categories.length * 30)}
           empty="Noch keine Antworten."
         />
-        <ChartCard title="Vertragsabschlüsse nach Monat" kind="bar" xLabel="Monat" data={contracts} xKey="month" series={[{ key: "won", label: "Neue Verträge", color: "var(--chart-1)" }]} empty="Noch keine Verträge." />
+        <ChartCard title="Gewonnene Aufträge nach Monat" kind="bar" xLabel="Monat" data={contracts} xKey="month" series={[{ key: "won", label: "Aufträge", color: "var(--chart-1)" }]} empty="Noch keine Aufträge." />
         <ChartCard
-          title="Neuer Monatsumsatz je Abschlussmonat"
+          title="Event-Umsatz nach Eventmonat"
           kind="bar"
           xLabel="Monat"
           data={contracts}
           xKey="month"
-          series={[{ key: "newMrr", label: "Neuer Monatsumsatz", color: "var(--chart-3)", format: "eur" }]}
+          series={[{ key: "eventRevenue", label: "Event-Umsatz", color: "var(--chart-3)", format: "eur" }]}
           empty="Noch kein Umsatz."
         />
       </div>
@@ -110,7 +110,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                   <TH className="text-right">Antworten</TH>
                   <TH className="text-right">Positiv</TH>
                   <TH className="text-right">Gewonnen</TH>
-                  <TH className="text-right">Umsatz/Mon.</TH>
+                  <TH className="text-right">Event-Umsatz</TH>
                 </TR>
               </THead>
               <TBody>
@@ -191,8 +191,8 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                   <TH>Mitarbeiter</TH>
                   <TH className="text-right">Zuständig für Firmen</TH>
                   <TH className="text-right">Offene Deals</TH>
-                  <TH className="text-right">Gewonnene Verträge</TH>
-                  <TH className="text-right">Aktiver Monatsumsatz</TH>
+                  <TH className="text-right">Gewonnene Aufträge</TH>
+                  <TH className="text-right">Abo-Umsatz mtl.</TH>
                 </TR>
               </THead>
               <TBody>

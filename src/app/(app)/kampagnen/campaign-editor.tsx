@@ -31,25 +31,29 @@ export type CampaignEditorValues = {
 export const DEFAULT_STEPS: CampaignEditorValues["steps"] = [
   {
     delayDays: 0,
-    subject: "Reinigung für {{firma}} in {{stadtteil}}",
+    subject: "Frisches Sushi für Ihr nächstes Team-Event, {{firma}}",
     body: `{{anrede}},
 
-vielen Dank für Ihr Interesse an unseren Reinigungsleistungen. Gern stelle ich Ihnen kurz vor, wie wir {{firma}} bei der Unterhalts- und Büroreinigung unterstützen können.
+vielen Dank für Ihr Interesse an unserem Sushi-Catering. Gern stelle ich Ihnen kurz vor, was wir für {{firma}} tun können:
 
-Wir sind ein Hamburger Reinigungsunternehmen und betreuen Gewerbeobjekte mit festen Teams, transparenten Leistungsverzeichnissen und kurzen Reaktionszeiten.
+• Sushi-Platten für Meetings, Kundentermine und Team-Lunches – auch vegetarisch und vegan
+• Catering für Firmenfeiern, Sommerfeste und Weihnachtsfeiern
+• Pünktliche Lieferung in {{stadtteil}} und ganz Hamburg, am Liefertag frisch zubereitet
 
-Gern erstellen wir Ihnen nach einer kostenlosen Besichtigung vor Ort ein unverbindliches Angebot. Passt Ihnen ein kurzer Termin in den nächsten Tagen?
+Planen Sie in den nächsten Wochen ein Event oder ein Meeting mit Bewirtung? Dann schicke ich Ihnen gern ein unverbindliches Angebot – mir genügen Datum, Personenzahl und eventuelle Ernährungswünsche.
 
 Mit freundlichen Grüßen
 {{absender}}
 {{absender_firma}}`,
   },
   {
-    delayDays: 5,
-    subject: "Re: Reinigung für {{firma}}",
+    delayDays: 6,
+    subject: "Re: Frisches Sushi für Ihr nächstes Team-Event, {{firma}}",
     body: `{{anrede}},
 
-ich wollte kurz nachhaken, ob Sie Interesse an einer kostenlosen Besichtigung haben. Ein Termin dauert etwa 20 Minuten.
+ich wollte kurz nachfragen, ob ein Sushi-Catering für Sie interessant ist. Gern stellen wir Ihnen für Ihr Team auch eine kleine Probierplatte zusammen.
+
+Eine kurze Antwort mit Termin und Personenzahl genügt – ich melde mich dann mit einem Angebot.
 
 Mit freundlichen Grüßen
 {{absender}}`,
@@ -98,7 +102,7 @@ export function CampaignEditor({ initial, mailboxes, aiConnected, brevoConnected
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             <Field label="Name der Kampagne" className="sm:col-span-2">
-              <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="z. B. Hausverwaltungen Altona – Frühjahr" />
+              <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="z. B. Agenturen Altona – Weihnachtsfeiern" />
             </Field>
             <Field label="Beschreibung / Ziel" className="sm:col-span-2">
               <Input value={v.description} onChange={(e) => setV({ ...v, description: e.target.value })} />

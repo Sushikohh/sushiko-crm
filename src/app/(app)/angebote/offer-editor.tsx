@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, Field, Input, NativeSelect, T
 import { fmt } from "@/lib/utils";
 import { saveOfferAction } from "@/server/actions/sales";
 
-type Item = { description: string; areaSqm: string; frequency: string; unit: "monthly" | "one_time"; quantity: string; unitPrice: string };
+type Item = { description: string; persons: string; frequency: string; unit: "monthly" | "one_time"; quantity: string; unitPrice: string };
 type Opt = { id: string; name: string };
 
 export type OfferEditorValues = {
@@ -21,13 +21,18 @@ export type OfferEditorValues = {
   items: Item[];
   vatRate: string;
   validUntil: string;
+  eventDate: string;
+  guestCount: string;
+  deliveryAddress: string;
+  dietaryNotes: string;
   introText: string;
   terms: string;
 };
 
 export const DEFAULT_TERMS = `Alle Preise verstehen sich netto zzgl. gesetzlicher Umsatzsteuer.
-Die Leistungen werden gemäß beigefügtem Leistungsverzeichnis erbracht. Reinigungsmittel und -geräte sind im Preis enthalten.
-Vertragslaufzeit 12 Monate, danach monatlich kündbar mit einer Frist von 3 Monaten.
+Frisch zubereitet am Liefertag. Lieferung auf Platten bzw. in Boxen inkl. Sojasauce, Wasabi, Ingwer und Stäbchen.
+Endgültige Personenzahl bitte bis 3 Werktage vor dem Termin bestätigen. Kostenfreie Stornierung bis 5 Werktage vorher.
+Allergeninformationen erhalten Sie mit der Auftragsbestätigung. Gekühlt lagern und innerhalb von 2 Stunden nach Lieferung verzehren.
 Dieses Angebot ist bis zum angegebenen Datum gültig.`;
 
 const num = (s: string) => Number(String(s).replace(",", ".")) || 0;
@@ -49,7 +54,7 @@ export function OfferEditor({ initial, companies, contacts, deals }: { initial: 
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           <Field label="Titel" className="sm:col-span-2">
-            <Input value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} placeholder="z. B. Unterhaltsreinigung Büroflächen 2. OG" />
+            <Input value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} placeholder="z. B. Sushi-Catering Weihnachtsfeier" />
           </Field>
           <Field label="Unternehmen">
             <NativeSelect value={v.companyId} onChange={(e) => setV({ ...v, companyId: e.target.value, contactId: "", dealId: "" })}>
@@ -89,10 +94,24 @@ export function OfferEditor({ initial, companies, contacts, deals }: { initial: 
             <Field label="Gültig bis">
               <Input type="date" value={v.validUntil} onChange={(e) => setV({ ...v, validUntil: e.target.value })} />
             </Field>
-            <Field label="USt. (%)">
+            <Field label="USt. (%)" hint="Lieferung ohne Service meist 7 %, mit Personal/Service meist 19 % – steuerlich prüfen.">
               <Input value={v.vatRate} onChange={(e) => setV({ ...v, vatRate: e.target.value })} inputMode="decimal" />
             </Field>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Eventdatum & Lieferzeit">
+              <Input type="datetime-local" value={v.eventDate} onChange={(e) => setV({ ...v, eventDate: e.target.value })} />
+            </Field>
+            <Field label="Personenzahl">
+              <Input value={v.guestCount} onChange={(e) => setV({ ...v, guestCount: e.target.value })} inputMode="numeric" />
+            </Field>
+          </div>
+          <Field label="Lieferadresse">
+            <Input value={v.deliveryAddress} onChange={(e) => setV({ ...v, deliveryAddress: e.target.value })} placeholder="Straße, PLZ, Etage / Ansprechpartner vor Ort" />
+          </Field>
+          <Field label="Ernährungshinweise & Allergene" className="sm:col-span-2">
+            <Input value={v.dietaryNotes} onChange={(e) => setV({ ...v, dietaryNotes: e.target.value })} placeholder="z. B. 10 × vegetarisch, 3 × vegan, 1 × ohne Sesam" />
+          </Field>
           <Field label="Einleitung" className="sm:col-span-2">
             <Textarea value={v.introText} onChange={(e) => setV({ ...v, introText: e.target.value })} rows={3} />
           </Field>
@@ -106,8 +125,8 @@ export function OfferEditor({ initial, companies, contacts, deals }: { initial: 
         <CardContent className="grid gap-2">
           <div className="hidden grid-cols-[1fr_80px_150px_120px_70px_100px_32px] gap-2 px-1 text-[11px] font-medium text-muted-foreground md:grid">
             <span>Leistung</span>
-            <span>m²</span>
-            <span>Turnus</span>
+            <span>Personen</span>
+            <span>Einheit / Turnus</span>
             <span>Abrechnung</span>
             <span>Menge</span>
             <span>Preis (€)</span>
@@ -115,12 +134,12 @@ export function OfferEditor({ initial, companies, contacts, deals }: { initial: 
           </div>
           {v.items.map((it, i) => (
             <div key={i} className="grid gap-2 rounded-lg border p-2 md:grid-cols-[1fr_80px_150px_120px_70px_100px_32px] md:border-0 md:p-0">
-              <Input value={it.description} onChange={(e) => setItem(i, { description: e.target.value })} placeholder="z. B. Unterhaltsreinigung Büro" aria-label="Leistung" />
-              <Input value={it.areaSqm} onChange={(e) => setItem(i, { areaSqm: e.target.value })} inputMode="numeric" aria-label="Fläche" />
-              <Input value={it.frequency} onChange={(e) => setItem(i, { frequency: e.target.value })} placeholder="z. B. 5× wöchentlich" aria-label="Turnus" />
+              <Input value={it.description} onChange={(e) => setItem(i, { description: e.target.value })} placeholder="z. B. Sushi-Mix-Platte Premium" aria-label="Leistung" />
+              <Input value={it.persons} onChange={(e) => setItem(i, { persons: e.target.value })} inputMode="numeric" aria-label="Personen" />
+              <Input value={it.frequency} onChange={(e) => setItem(i, { frequency: e.target.value })} placeholder="z. B. Platte à 40 Stück" aria-label="Turnus" />
               <NativeSelect value={it.unit} onChange={(e) => setItem(i, { unit: e.target.value as Item["unit"] })} aria-label="Abrechnung">
-                <option value="monthly">monatlich</option>
-                <option value="one_time">einmalig</option>
+                <option value="one_time">pro Event</option>
+                <option value="monthly">monatlich (Abo)</option>
               </NativeSelect>
               <Input value={it.quantity} onChange={(e) => setItem(i, { quantity: e.target.value })} inputMode="decimal" aria-label="Menge" />
               <Input value={it.unitPrice} onChange={(e) => setItem(i, { unitPrice: e.target.value })} inputMode="decimal" aria-label="Preis" />
@@ -129,26 +148,36 @@ export function OfferEditor({ initial, companies, contacts, deals }: { initial: 
               </Button>
             </div>
           ))}
-          <Button size="sm" variant="outline" className="w-fit" onClick={() => setV({ ...v, items: [...v.items, { description: "", areaSqm: "", frequency: "", unit: "monthly", quantity: "1", unitPrice: "" }] })}>
+          <Button size="sm" variant="outline" className="w-fit" onClick={() => setV({ ...v, items: [...v.items, { description: "", persons: "", frequency: "", unit: "one_time", quantity: "1", unitPrice: "" }] })}>
             <Plus /> Position
           </Button>
           <div className="mt-3 ml-auto grid w-full max-w-sm gap-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Monatlich netto</span>
-              <span className="tabular-nums">{fmt.eur2(monthly)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">zzgl. USt.</span>
-              <span className="tabular-nums">{fmt.eur2(monthly * vat)}</span>
-            </div>
-            <div className="flex justify-between font-semibold">
-              <span>Monatlich brutto</span>
-              <span className="tabular-nums">{fmt.eur2(monthly * (1 + vat))}</span>
-            </div>
-            {oneTime ? (
-              <div className="mt-1 flex justify-between text-muted-foreground">
-                <span>Einmalig netto</span>
-                <span className="tabular-nums">{fmt.eur2(oneTime)}</span>
+            {oneTime || !monthly ? (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Event netto</span>
+                  <span className="tabular-nums">{fmt.eur2(oneTime)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">zzgl. USt.</span>
+                  <span className="tabular-nums">{fmt.eur2(oneTime * vat)}</span>
+                </div>
+                <div className="flex justify-between font-semibold">
+                  <span>Event brutto</span>
+                  <span className="tabular-nums">{fmt.eur2(oneTime * (1 + vat))}</span>
+                </div>
+                {num(v.guestCount) > 0 ? (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>pro Person netto</span>
+                    <span className="tabular-nums">{fmt.eur2(oneTime / num(v.guestCount))}</span>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+            {monthly ? (
+              <div className="mt-1 flex justify-between border-t pt-1">
+                <span className="text-muted-foreground">Abo monatlich netto</span>
+                <span className="tabular-nums">{fmt.eur2(monthly)}</span>
               </div>
             ) : null}
           </div>
@@ -174,9 +203,13 @@ export function OfferEditor({ initial, companies, contacts, deals }: { initial: 
                 companyId: v.companyId,
                 contactId: v.contactId || null,
                 dealId: v.dealId || null,
-                items: v.items.map((i) => ({ description: i.description, areaSqm: i.areaSqm ? num(i.areaSqm) : null, frequency: i.frequency, unit: i.unit, quantity: num(i.quantity), unitPrice: num(i.unitPrice) })),
+                items: v.items.map((i) => ({ description: i.description, persons: i.persons ? num(i.persons) : null, frequency: i.frequency, unit: i.unit, quantity: num(i.quantity), unitPrice: num(i.unitPrice) })),
                 vatRate: num(v.vatRate),
                 validUntil: v.validUntil || null,
+                eventDate: v.eventDate || null,
+                guestCount: v.guestCount ? Math.round(num(v.guestCount)) : null,
+                deliveryAddress: v.deliveryAddress,
+                dietaryNotes: v.dietaryNotes,
                 introText: v.introText,
                 terms: v.terms,
               });

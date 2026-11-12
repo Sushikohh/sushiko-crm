@@ -21,18 +21,18 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const DEMO: [string, IndustryKey, string, string, string][] = [
-  ["Demo Alsterblick Hausverwaltung", "property_management", "20354", "Neustadt", "Objektverwaltung"],
-  ["Demo Elbufer Immobilien", "commercial_property", "22767", "Altona-Altstadt", "Asset Management"],
-  ["Demo Praxis am Schanzenpark", "medical", "20357", "Sternschanze", "Praxisinhaberin"],
-  ["Demo Zahnzentrum Eppendorf", "medical", "20249", "Eppendorf", "Praxismanagement"],
-  ["Demo FitWerk Barmbek", "fitness", "22305", "Barmbek-Nord", "Studioleitung"],
-  ["Demo Kita Sonnenstrahl", "daycare", "22761", "Bahrenfeld", "Kitaleitung"],
-  ["Demo Hafen Logistik", "logistics", "21129", "Finkenwerder", "Facility Management"],
-  ["Demo Business Park Billbrook", "business_park", "22113", "Billbrook", "Centermanagement"],
-  ["Demo Hotel Speicherstadt", "hotel", "20457", "HafenCity", "Hausdame"],
-  ["Demo Kanzlei Rothenbaum", "office", "20148", "Rotherbaum", "Office Management"],
-  ["Demo Sprachschule Winterhude", "education", "22301", "Winterhude", "Geschäftsführung"],
-  ["Demo Modehaus Ottensen", "retail", "22765", "Ottensen", "Filialleitung"],
+  ["Demo Elbkreativ Werbeagentur", "agency", "22765", "Ottensen", "Office Managerin"],
+  ["Demo Alsterwerk Eventlocation", "event_agency", "20457", "HafenCity", "Eventmanagement"],
+  ["Demo Kanzlei am Ballindamm", "consulting", "20095", "Hamburg-Altstadt", "Assistenz der Geschäftsführung"],
+  ["Demo Hafencode Software", "tech", "20359", "St. Pauli", "Head of People"],
+  ["Demo Schanze Coworking", "coworking", "20357", "Sternschanze", "Community Managerin"],
+  ["Demo Hotel Speicherstadt", "hotel", "20457", "HafenCity", "Bankettleitung"],
+  ["Demo Nordlicht Versicherung", "office", "22297", "Winterhude", "Office Management"],
+  ["Demo Medienhaus Rotherbaum", "agency", "20148", "Rotherbaum", "Feel Good Managerin"],
+  ["Demo Steuerberatung Eppendorf", "consulting", "20249", "Eppendorf", "Kanzleimanagerin"],
+  ["Demo Akademie Barmbek", "education", "22305", "Barmbek-Nord", "Veranstaltungsorganisation"],
+  ["Demo Yoga Loft Eimsbüttel", "fitness", "20259", "Eimsbüttel", "Inhaberin"],
+  ["Demo Design Showroom Altona", "retail", "22767", "Altona-Altstadt", "Marketing"],
 ];
 const FIRST = ["Anna", "Jonas", "Lea", "Mehmet", "Sophie", "Lukas", "Mia", "Paul", "Hannah", "Finn", "Emma", "Ben"];
 const LAST = ["Petersen", "Schulz", "Hansen", "Yilmaz", "Jensen", "Wagner", "Becker", "Krüger", "Lorenz", "Möller", "Brandt", "Vogel"];
@@ -59,9 +59,9 @@ async function seed() {
   await ensureDefaultAutomations();
   const [campaign] = await db
     .insert(schema.campaigns)
-    .values({ name: "Demo: Hausverwaltungen & Praxen", status: "completed", channel: "smtp", ownerId: owner?.id, startedAt: new Date(Date.now() - 60 * 86400_000) })
+    .values({ name: "Demo: Agenturen & Kanzleien – Weihnachtsfeiern", status: "completed", channel: "smtp", ownerId: owner?.id, startedAt: new Date(Date.now() - 60 * 86400_000) })
     .returning();
-  const [step] = await db.insert(schema.campaignSteps).values({ campaignId: campaign.id, stepOrder: 0, subject: "Reinigung für {{firma}}", body: "{{anrede}}, …" }).returning();
+  const [step] = await db.insert(schema.campaignSteps).values({ campaignId: campaign.id, stepOrder: 0, subject: "Sushi für {{firma}}", body: "{{anrede}}, …" }).returning();
 
   const day = 86400_000;
   for (const [i, [name, industry, plz, district, position]] of DEMO.entries()) {
@@ -83,7 +83,7 @@ async function seed() {
         sourceRef: `demo-${i}`,
         tags: ["Demo"],
         employeeCount: 10 + i * 7,
-        areaSqm: 300 + i * 180,
+        eventGuests: 20 + i * 8,
         ownerId: owner?.id,
         capturedAt,
         estimatedMonthlyValue: String(600 + i * 150),
@@ -118,7 +118,7 @@ async function seed() {
       companyId: co.id,
       fromEmail: "demo@example.com",
       toEmails: [email],
-      subject: `Reinigung für ${name}`,
+      subject: `Sushi für ${name}`,
       bodyText: "Demo-Nachricht",
       snippet: "Demo-Nachricht",
       messageIdHeader: msgId,
@@ -142,7 +142,7 @@ async function seed() {
         fromEmail: email,
         fromName: `${FIRST[i]} ${LAST[i]}`,
         toEmails: ["demo@example.com"],
-        subject: `Re: Reinigung für ${name}`,
+        subject: `Re: Sushi für ${name}`,
         bodyText: "Demo-Antwort",
         snippet: "Demo-Antwort",
         messageIdHeader: `<${randomUUID()}@example.com>`,
@@ -159,21 +159,23 @@ async function seed() {
       await db.update(schema.campaignRecipients).set({ status: "replied" }).where(eq(schema.campaignRecipients.id, rec.id));
     }
     if (replyCat === "interested" || replyCat === "meeting_request") {
-      const stage = (["visit_scheduled", "offer_sent", "won", "negotiation", "interested"] as const)[i % 5];
-      const value = String(700 + i * 120);
-      const [deal] = await db.insert(schema.deals).values({ title: `Unterhaltsreinigung ${name}`, companyId: co.id, contactId: ct.id, stage, monthlyValue: value, probability: 50, ownerId: owner?.id }).returning();
-      await db.insert(schema.appointments).values({ title: "Besichtigung", startsAt: new Date(Date.now() + (i - 3) * day), companyId: co.id, contactId: ct.id, dealId: deal.id, status: i < 3 ? "done" : "planned", location: `Demostraße ${i + 1}, ${plz} Hamburg` });
+      const stage = (({ 0: "won", 1: "offer_sent", 5: "won" }) as Record<number, "won" | "offer_sent" | "visit_scheduled" | "negotiation">)[i] ?? "negotiation";
+      const value = String(450 + i * 90);
+      const [deal] = await db.insert(schema.deals).values({ title: `Sushi-Catering ${name}`, companyId: co.id, contactId: ct.id, stage, monthlyValue: value, probability: 50, ownerId: owner?.id }).returning();
+      await db.insert(schema.appointments).values({ title: "Verkostung", type: "tasting", startsAt: new Date(Date.now() + (i - 3) * day), companyId: co.id, contactId: ct.id, dealId: deal.id, status: i < 3 ? "done" : "planned", location: `Demostraße ${i + 1}, ${plz} Hamburg` });
       if (stage === "won" || stage === "offer_sent" || stage === "negotiation") {
         const [offer] = await db
           .insert(schema.offers)
-          .values({ number: `DEMO-${i}`, title: `Unterhaltsreinigung ${name}`, companyId: co.id, contactId: ct.id, dealId: deal.id, status: stage === "won" ? "accepted" : "sent", items: [{ description: "Unterhaltsreinigung (Demo)", frequency: "5× wöchentlich", unit: "monthly", quantity: 1, unitPrice: Number(value) }], monthlyNet: value, sentAt: new Date(Date.now() - 20 * day) })
+          .values({ number: `DEMO-${i}`, title: `Sushi-Catering Weihnachtsfeier ${name}`, companyId: co.id, contactId: ct.id, dealId: deal.id, status: stage === "won" ? "accepted" : "sent", items: [{ description: "Sushi-Mix-Platte (Demo)", persons: 10, frequency: "Platte à 40 Stück", unit: "one_time", quantity: Math.ceil(Number(value) / 90), unitPrice: 90 }], oneTimeNet: String(Math.ceil(Number(value) / 90) * 90), vatRate: "7", guestCount: 20 + i * 8, eventDate: stage === "won" ? new Date(Date.now() - (5 + i) * day) : new Date(Date.now() + (10 + i) * day), sentAt: new Date(Date.now() - 20 * day), decidedAt: stage === "won" ? new Date(Date.now() - 5 * day) : null })
           .returning();
+        if (stage === "won" && i === 0) {
+          await db.insert(schema.contracts).values({ title: `Team-Lunch wöchentlich ${name}`, companyId: co.id, offerId: offer.id, dealId: deal.id, monthlyValue: "640", startDate: new Date(Date.now() - 10 * day).toISOString().slice(0, 10), signedAt: new Date(Date.now() - 12 * day), ownerId: owner?.id, serviceScope: "Dienstags Lunch-Platten für 12 Personen (Demo)" });
+        }
         if (stage === "won") {
-          await db.insert(schema.contracts).values({ title: `Unterhaltsreinigung ${name}`, companyId: co.id, offerId: offer.id, dealId: deal.id, monthlyValue: value, startDate: new Date(Date.now() - 10 * day).toISOString().slice(0, 10), signedAt: new Date(Date.now() - 12 * day), ownerId: owner?.id });
           await db.update(schema.companies).set({ status: "won" }).where(eq(schema.companies.id, co.id));
         } else await db.update(schema.companies).set({ status: "offer_created" }).where(eq(schema.companies.id, co.id));
       } else await db.update(schema.companies).set({ status: "interested" }).where(eq(schema.companies.id, co.id));
-      await db.insert(schema.tasks).values({ title: "Rückruf: Besichtigung abstimmen", type: "call", dueAt: new Date(Date.now() + (i - 4) * day), companyId: co.id, contactId: ct.id, assigneeId: owner?.id, priority: "high" });
+      await db.insert(schema.tasks).values({ title: "Rückruf: Personenzahl und Termin abstimmen", type: "call", dueAt: new Date(Date.now() + (i - 4) * day), companyId: co.id, contactId: ct.id, assigneeId: owner?.id, priority: "high" });
     } else {
       await db.update(schema.companies).set({ status: replyCat === "not_interested" ? "not_interested" : replyCat === "later" ? "contact_later" : "contacted" }).where(eq(schema.companies.id, co.id));
     }

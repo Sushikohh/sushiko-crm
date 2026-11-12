@@ -20,18 +20,19 @@ import {
 
 export const userRole = pgEnum("user_role", ["admin", "member"]);
 
+/** Zielbranchen für B2B-Sushi-Catering (Firmenevents, Mitarbeiterverpflegung, Kundenveranstaltungen). */
 export const industry = pgEnum("industry", [
-  "property_management",
+  "agency",
   "office",
   "medical",
   "fitness",
-  "daycare",
+  "tech",
   "education",
   "retail",
   "hotel",
-  "business_park",
-  "logistics",
-  "commercial_property",
+  "coworking",
+  "consulting",
+  "event_agency",
   "other",
 ]);
 
@@ -104,7 +105,7 @@ export const dealStage = pgEnum("deal_stage", [
   "lost",
 ]);
 
-export const taskType = pgEnum("task_type", ["task", "call", "follow_up", "email", "site_visit"]);
+export const taskType = pgEnum("task_type", ["task", "call", "follow_up", "email", "tasting"]);
 export const taskPriority = pgEnum("task_priority", ["low", "normal", "high"]);
 export const appointmentStatus = pgEnum("appointment_status", ["planned", "done", "cancelled", "no_show"]);
 export const offerStatus = pgEnum("offer_status", ["draft", "sent", "accepted", "rejected", "expired"]);
@@ -166,7 +167,8 @@ export const companies = pgTable(
     email: text("email"),
     companySize: text("company_size"),
     employeeCount: integer("employee_count"),
-    areaSqm: integer("area_sqm"),
+    /** Typische Gästezahl bei Firmenevents / Bestellungen. */
+    eventGuests: integer("event_guests"),
     source: text("source").notNull().default("manual"),
     sourceRef: text("source_ref"),
     capturedAt: timestamp("captured_at", { withTimezone: true }).notNull().defaultNow(),
@@ -207,7 +209,8 @@ export const companyLocations = pgTable("company_locations", {
   postalCode: text("postal_code"),
   city: text("city").default("Hamburg"),
   district: text("district"),
-  areaSqm: integer("area_sqm"),
+  /** Mitarbeitende am Standort (Lunch-/Eventpotenzial). */
+  headcount: integer("headcount"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -511,7 +514,8 @@ export const tasks = pgTable(
 export const appointments = pgTable("appointments", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
-  type: text("type").notNull().default("site_visit"),
+  /** tasting = Verkostung, meeting, call, delivery = Event/Lieferung */
+  type: text("type").notNull().default("tasting"),
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   endsAt: timestamp("ends_at", { withTimezone: true }),
   location: text("location"),
@@ -527,8 +531,11 @@ export const appointments = pgTable("appointments", {
 
 export type OfferItem = {
   description: string;
-  areaSqm?: number | null;
+  /** Personenzahl, für die die Position kalkuliert ist. */
+  persons?: number | null;
+  /** z. B. „1 Platte à 40 Stück“, „wöchentlich dienstags“ */
   frequency: string;
+  /** monthly = wiederkehrend (Rahmenvertrag), one_time = pro Event/Bestellung */
   unit: "monthly" | "one_time";
   quantity: number;
   unitPrice: number;
@@ -547,8 +554,14 @@ export const offers = pgTable("offers", {
   items: jsonb("items").$type<OfferItem[]>().notNull().default(sql`'[]'::jsonb`),
   monthlyNet: numeric("monthly_net", { precision: 12, scale: 2 }).notNull().default("0"),
   oneTimeNet: numeric("one_time_net", { precision: 12, scale: 2 }).notNull().default("0"),
-  vatRate: numeric("vat_rate", { precision: 5, scale: 2 }).notNull().default("19"),
+  /** Speisenlieferung ohne Service i. d. R. 7 %, Catering mit Personal/Service i. d. R. 19 % – steuerlich prüfen. */
+  vatRate: numeric("vat_rate", { precision: 5, scale: 2 }).notNull().default("7"),
   validUntil: date("valid_until"),
+  eventDate: timestamp("event_date", { withTimezone: true }),
+  guestCount: integer("guest_count"),
+  deliveryAddress: text("delivery_address"),
+  /** Allergene, vegetarisch/vegan, Unverträglichkeiten */
+  dietaryNotes: text("dietary_notes"),
   introText: text("intro_text"),
   terms: text("terms"),
   sentAt: timestamp("sent_at", { withTimezone: true }),

@@ -113,7 +113,7 @@ export function ContactDialog({ initial, companies, trigger }: { initial?: Parti
             </Field>
           </div>
           <Field label="Funktion / Position">
-            <Input value={v.position} onChange={on("position")} placeholder="z. B. Objektleitung, Praxisinhaberin" />
+            <Input value={v.position} onChange={on("position")} placeholder="z. B. Office Managerin, Head of People, Eventmanagement" />
           </Field>
           <Field label="Status">
             <NativeSelect value={v.status} onChange={on("status")}>

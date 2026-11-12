@@ -14,7 +14,7 @@ export type ContractValues = { id?: string; title: string; companyId: string; mo
 
 export function ContractDialog({ initial, companies, trigger }: { initial?: Partial<ContractValues>; companies: { id: string; name: string }[]; trigger?: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
-  const [v, setV] = React.useState<ContractValues>({ title: "Unterhaltsreinigung", companyId: "", monthlyValue: "", startDate: new Date().toISOString().slice(0, 10), endDate: "", noticePeriodMonths: "3", serviceScope: "", status: "active", ...initial });
+  const [v, setV] = React.useState<ContractValues>({ title: "Team-Lunch (wöchentlich)", companyId: "", monthlyValue: "", startDate: new Date().toISOString().slice(0, 10), endDate: "", noticePeriodMonths: "3", serviceScope: "", status: "active", ...initial });
   const [pending, start] = React.useTransition();
   const router = useRouter();
   const on = (k: keyof ContractValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setV((s) => ({ ...s, [k]: e.target.value }));
@@ -23,13 +23,13 @@ export function ContractDialog({ initial, companies, trigger }: { initial?: Part
       <DialogTrigger asChild>
         {trigger ?? (
           <Button size="sm" variant="outline">
-            <Plus /> Vertrag erfassen
+            <Plus /> Rahmenvertrag erfassen
           </Button>
         )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{v.id ? "Vertrag bearbeiten" : "Vertrag erfassen"}</DialogTitle>
+          <DialogTitle>{v.id ? "Rahmenvertrag bearbeiten" : "Rahmenvertrag erfassen"}</DialogTitle>
         </DialogHeader>
         <form
           className="grid gap-3"
@@ -47,7 +47,7 @@ export function ContractDialog({ initial, companies, trigger }: { initial?: Part
                 status: v.status as never,
               });
               if (r.ok) {
-                toast.success("Vertrag gespeichert");
+                toast.success("Rahmenvertrag gespeichert");
                 setOpen(false);
                 router.refresh();
               } else toast.error(r.error);
@@ -90,7 +90,7 @@ export function ContractDialog({ initial, companies, trigger }: { initial?: Part
               <Input type="number" min={0} max={36} value={v.noticePeriodMonths} onChange={on("noticePeriodMonths")} />
             </Field>
           </div>
-          <Field label="Leistungsumfang">
+          <Field label="Leistungsumfang (Lieferrhythmus, Personen, Menü)">
             <Textarea value={v.serviceScope} onChange={on("serviceScope")} rows={3} />
           </Field>
           <DialogFooter>

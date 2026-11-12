@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     getSetting("sender_identity"),
   ]);
   const badges = { inbox, tasks };
-  const companyName = identity?.companyName || "Meine Reinigungsfirma";
+  const companyName = identity?.companyName || "Sushiko Hamburg";
   return (
     <div className="flex min-h-svh">
       <aside className="no-print sticky top-0 hidden h-svh w-60 shrink-0 flex-col gap-4 border-r bg-sidebar p-3 md:flex">

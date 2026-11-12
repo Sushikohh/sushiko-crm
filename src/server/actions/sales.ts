@@ -120,7 +120,7 @@ export async function deleteDealAction(id: string) {
 const taskSchema = z.object({
   title: z.string().trim().min(2, "Titel fehlt"),
   description: z.string().trim().optional().nullable(),
-  type: z.enum(["task", "call", "follow_up", "email", "site_visit"]).default("task"),
+  type: z.enum(["task", "call", "follow_up", "email", "tasting"]).default("task"),
   priority: z.enum(["low", "normal", "high"]).default("normal"),
   dueAt: z.string().optional().nullable(),
   companyId: uuidOpt,
@@ -167,11 +167,11 @@ export async function deleteTaskAction(id: string) {
   });
 }
 
-/* ---------------- Termine / Besichtigungen ---------------- */
+/* ---------------- Termine / Verkostungen / Events ---------------- */
 
 const apptSchema = z.object({
   title: z.string().trim().min(2, "Titel fehlt"),
-  type: z.string().default("site_visit"),
+  type: z.enum(["tasting", "meeting", "call", "delivery"]).default("tasting"),
   startsAt: z.string().min(1, "Beginn fehlt"),
   endsAt: z.string().optional().nullable(),
   location: z.string().trim().optional().nullable(),
@@ -203,7 +203,7 @@ export async function saveAppointmentAction(id: string | null, raw: z.input<type
     else {
       await db.insert(schema.appointments).values(values);
       await logActivity({ type: "meeting", title: `Termin geplant: ${v.title}`, body: `${startsAt.toLocaleString("de-DE")}${v.location ? ` · ${v.location}` : ""}`, companyId: values.companyId, contactId: values.contactId, dealId: values.dealId, userId: me.id });
-      if (values.companyId && v.type === "site_visit") {
+      if (values.companyId && v.type === "tasting") {
         await setCompanyStatus(values.companyId, "visit_scheduled", me.id);
         const [open] = await db.select().from(schema.deals).where(and(eq(schema.deals.companyId, values.companyId), sql`${schema.deals.stage} in ('lead','contacted','interested')`)).limit(1);
         if (open) await db.update(schema.deals).set({ stage: "visit_scheduled", probability: DEAL_STAGES.visit_scheduled.probability }).where(eq(schema.deals.id, open.id));
@@ -226,7 +226,7 @@ export async function setAppointmentStatusAction(id: string, status: "planned" |
 
 const itemSchema = z.object({
   description: z.string().trim().min(1, "Leistung fehlt"),
-  areaSqm: z.coerce.number().min(0).nullable().optional(),
+  persons: z.coerce.number().int().min(0).nullable().optional(),
   frequency: z.string().trim().default(""),
   unit: z.enum(["monthly", "one_time"]),
   quantity: z.coerce.number().min(0),
@@ -239,8 +239,12 @@ const offerSchema = z.object({
   contactId: uuidOpt,
   dealId: uuidOpt,
   items: z.array(itemSchema).min(1, "Mindestens eine Position"),
-  vatRate: z.coerce.number().min(0).max(30).default(19),
+  vatRate: z.coerce.number().min(0).max(30).default(7),
   validUntil: z.string().optional().nullable(),
+  eventDate: z.string().optional().nullable(),
+  guestCount: z.coerce.number().int().min(0).max(100000).optional().nullable(),
+  deliveryAddress: z.string().trim().max(500).optional().nullable(),
+  dietaryNotes: z.string().trim().max(2000).optional().nullable(),
   introText: z.string().optional().nullable(),
   terms: z.string().optional().nullable(),
 });
@@ -249,7 +253,7 @@ export async function saveOfferAction(id: string | null, raw: z.input<typeof off
   const me = await requireUser();
   return run(async () => {
     const v = offerSchema.parse(raw);
-    const items: OfferItem[] = v.items.map((i) => ({ ...i, areaSqm: i.areaSqm ?? null }));
+    const items: OfferItem[] = v.items.map((i) => ({ ...i, persons: i.persons ?? null }));
     const monthly = items.filter((i) => i.unit === "monthly").reduce((s, i) => s + i.quantity * i.unitPrice, 0);
     const oneTime = items.filter((i) => i.unit === "one_time").reduce((s, i) => s + i.quantity * i.unitPrice, 0);
     const values = {
@@ -262,6 +266,10 @@ export async function saveOfferAction(id: string | null, raw: z.input<typeof off
       oneTimeNet: oneTime.toFixed(2),
       vatRate: String(v.vatRate),
       validUntil: v.validUntil || null,
+      eventDate: v.eventDate ? new Date(v.eventDate) : null,
+      guestCount: v.guestCount ?? null,
+      deliveryAddress: v.deliveryAddress || null,
+      dietaryNotes: v.dietaryNotes || null,
       introText: v.introText ?? null,
       terms: v.terms ?? null,
       updatedAt: new Date(),
@@ -305,24 +313,44 @@ export async function setOfferStatusAction(id: string, status: "draft" | "sent" 
     if (status === "sent") await moveDeal("offer_sent");
     if (status === "rejected") await moveDeal("lost");
     if (status === "accepted") {
-      const startDate = contract?.startDate || now.toISOString().slice(0, 10);
       const items = (o.items ?? []) as OfferItem[];
-      const [k] = await db
-        .insert(schema.contracts)
-        .values({
-          title: o.title,
+      const eur = (v: string | number) => Number(v).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+      // Wiederkehrende Positionen (z. B. Lunch-Abo) → Rahmenvertrag; Event-Positionen → Auftrag zum Eventtermin
+      if (Number(o.monthlyNet) > 0) {
+        const startDate = contract?.startDate || now.toISOString().slice(0, 10);
+        const [k] = await db
+          .insert(schema.contracts)
+          .values({
+            title: o.title,
+            companyId: o.companyId,
+            offerId: o.id,
+            dealId: o.dealId,
+            monthlyValue: o.monthlyNet,
+            startDate,
+            noticePeriodMonths: contract?.noticePeriodMonths ?? 3,
+            serviceScope: items.filter((i) => i.unit === "monthly").map((i) => `${i.description}${i.frequency ? ` (${i.frequency})` : ""}`).join("\n"),
+            signedAt: now,
+            ownerId: o.ownerId ?? me.id,
+          })
+          .returning({ id: schema.contracts.id });
+        await logActivity({ type: "contract", title: `Rahmenvertrag abgeschlossen: ${o.title}`, body: `${eur(o.monthlyNet)} / Monat`, companyId: o.companyId, dealId: o.dealId, userId: me.id, meta: { contractId: k.id } });
+      }
+      if (Number(o.oneTimeNet) > 0) {
+        await logActivity({ type: "contract", title: `Catering-Auftrag bestätigt: ${o.title}`, body: `${eur(o.oneTimeNet)} netto${o.guestCount ? ` · ${o.guestCount} Personen` : ""}${o.eventDate ? ` · ${o.eventDate.toLocaleDateString("de-DE")}` : ""}`, companyId: o.companyId, dealId: o.dealId, userId: me.id });
+      }
+      if (o.eventDate) {
+        await db.insert(schema.appointments).values({
+          title: `Lieferung: ${o.title}`,
+          type: "delivery",
+          startsAt: o.eventDate,
+          location: o.deliveryAddress,
+          notes: [o.guestCount ? `${o.guestCount} Personen` : null, o.dietaryNotes].filter(Boolean).join(" · ") || null,
           companyId: o.companyId,
-          offerId: o.id,
+          contactId: o.contactId,
           dealId: o.dealId,
-          monthlyValue: o.monthlyNet,
-          startDate,
-          noticePeriodMonths: contract?.noticePeriodMonths ?? 3,
-          serviceScope: items.map((i) => `${i.description}${i.frequency ? ` (${i.frequency})` : ""}`).join("\n"),
-          signedAt: now,
           ownerId: o.ownerId ?? me.id,
-        })
-        .returning({ id: schema.contracts.id });
-      await logActivity({ type: "contract", title: `Vertrag abgeschlossen: ${o.title}`, body: `${Number(o.monthlyNet).toLocaleString("de-DE", { style: "currency", currency: "EUR" })} / Monat`, companyId: o.companyId, dealId: o.dealId, userId: me.id, meta: { contractId: k.id } });
+        });
+      }
       await moveDeal("won");
       await setCompanyStatus(o.companyId, "won", me.id);
       await enqueue(QUEUES.automationEvent, { event: "offer.accepted", eventKey: `offer:${o.id}:accepted`, companyId: o.companyId, dealId: o.dealId, data: { offerId: o.id } }).catch(() => undefined);
@@ -331,7 +359,7 @@ export async function setOfferStatusAction(id: string, status: "draft" | "sent" 
   }, "Status aktualisiert");
 }
 
-/* ---------------- Verträge ---------------- */
+/* ---------------- Rahmenverträge (wiederkehrendes Catering) ---------------- */
 
 const contractSchema = z.object({
   title: z.string().trim().min(2),
@@ -352,9 +380,9 @@ export async function saveContractAction(id: string | null, raw: z.input<typeof 
     if (id) await db.update(schema.contracts).set(values).where(eq(schema.contracts.id, id));
     else {
       await db.insert(schema.contracts).values({ ...values, signedAt: new Date(), ownerId: me.id });
-      await logActivity({ type: "contract", title: `Vertrag erfasst: ${v.title}`, companyId: v.companyId, userId: me.id });
+      await logActivity({ type: "contract", title: `Rahmenvertrag erfasst: ${v.title}`, companyId: v.companyId, userId: me.id });
       await setCompanyStatus(v.companyId, "won", me.id);
     }
     rp(v.companyId);
-  }, "Vertrag gespeichert");
+  }, "Rahmenvertrag gespeichert");
 }

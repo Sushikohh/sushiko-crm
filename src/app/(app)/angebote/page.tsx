@@ -10,7 +10,7 @@ import { Badge, Card, EmptyState, PageHeader, TBody, TD, TH, THead, TR, Table } 
 import { Button } from "@/components/ui/button";
 import { ContractDialog } from "./contract-dialog";
 
-export const metadata = { title: "Angebote & Verträge" };
+export const metadata = { title: "Angebote & Aufträge" };
 
 export default async function OffersPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   await requireUser();
@@ -38,8 +38,8 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <PageHeader
-        title="Angebote & Verträge"
-        description="Angebote erstellen, nachverfolgen und gewonnene Reinigungsverträge dokumentieren."
+        title="Angebote & Aufträge"
+        description="Catering-Angebote für Events erstellen und nachverfolgen; wiederkehrende Lieferungen als Rahmenvertrag führen."
         actions={
           <>
             <ContractDialog companies={companies} />
@@ -61,11 +61,11 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
           <p className="mt-1 text-xl font-semibold">{fmt.eur(sum?.openValue)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Aktive Verträge</p>
+          <p className="text-xs text-muted-foreground">Aktive Rahmenverträge</p>
           <p className="mt-1 text-xl font-semibold">{sum?.active ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Monatsumsatz</p>
+          <p className="text-xs text-muted-foreground">Abo-Umsatz mtl.</p>
           <p className="mt-1 text-xl font-semibold">{fmt.eur(sum?.mrr)}</p>
         </Card>
       </div>
@@ -74,18 +74,18 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
           Angebote ({offers.length})
         </Link>
         <Link href="/angebote?tab=vertraege" className={pill(tab === "vertraege")}>
-          Verträge ({contracts.length})
+          Rahmenverträge ({contracts.length})
         </Link>
       </div>
       {tab === "vertraege" ? (
         contracts.length === 0 ? (
-          <EmptyState icon={<FileText className="size-5" />} title="Noch keine Verträge" description="Verträge entstehen automatisch, wenn ein Angebot als angenommen markiert wird, oder werden manuell erfasst." />
+          <EmptyState icon={<FileText className="size-5" />} title="Noch keine Rahmenverträge" description="Rahmenverträge (z. B. wöchentlicher Team-Lunch) entstehen automatisch aus angenommenen Angeboten mit Abo-Positionen oder werden manuell erfasst." />
         ) : (
           <div className="rounded-xl border bg-card">
             <Table>
               <THead>
                 <TR className="hover:bg-transparent">
-                  <TH>Vertrag</TH>
+                  <TH>Rahmenvertrag</TH>
                   <TH>Unternehmen</TH>
                   <TH className="text-right">Monatlich</TH>
                   <TH className="text-right">Jahreswert</TH>

@@ -79,7 +79,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           <ComposeDialog to={primary?.email ?? c.email ?? ""} contactId={primary?.id} companyId={c.id} aiAvailable={ai} />
           <TaskDialog companyId={c.id} contacts={contactOpts} owners={owners} />
           <AppointmentDialog companyId={c.id} contacts={contactOpts} location={address} />
-          <DealDialog initial={{ companyId: c.id, title: `Unterhaltsreinigung ${c.name}`, monthlyValue: c.estimatedMonthlyValue ?? "", contactId: primary?.id ?? "" }} contacts={contactOpts} owners={owners} />
+          <DealDialog initial={{ companyId: c.id, title: `Sushi-Catering ${c.name}`, monthlyValue: c.estimatedMonthlyValue ?? "", contactId: primary?.id ?? "" }} contacts={contactOpts} owners={owners} />
           <Button size="sm" variant="outline" asChild>
             <Link href={`/angebote/neu?company=${c.id}`}>
               <FilePlus2 /> Angebot
@@ -100,7 +100,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               email: c.email ?? "",
               companySize: c.companySize ?? "",
               employeeCount: c.employeeCount?.toString() ?? "",
-              areaSqm: c.areaSqm?.toString() ?? "",
+              eventGuests: c.eventGuests?.toString() ?? "",
               estimatedMonthlyValue: c.estimatedMonthlyValue ?? "",
               status: c.status,
               ownerId: c.ownerId ?? "",
@@ -123,7 +123,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               <TabsTrigger value="activity">Aktivitäten</TabsTrigger>
               <TabsTrigger value="mail">Kommunikation ({d.messages.length})</TabsTrigger>
               <TabsTrigger value="tasks">Aufgaben & Termine ({openTasks + d.appointments.filter((a) => a.status === "planned").length})</TabsTrigger>
-              <TabsTrigger value="sales">Angebote & Verträge ({d.offers.length + d.contracts.length})</TabsTrigger>
+              <TabsTrigger value="sales">Angebote & Aufträge ({d.offers.length + d.contracts.length})</TabsTrigger>
               <TabsTrigger value="locations">Standorte ({d.locations.length + 1})</TabsTrigger>
             </TabsList>
             <TabsContent value="activity" className="grid gap-4">
@@ -159,7 +159,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               />
               <Card>
                 <CardHeader>
-                  <CardTitle>Termine & Besichtigungen</CardTitle>
+                  <CardTitle>Termine & Verkostungen</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-2">
                   {d.appointments.length === 0 ? <p className="text-sm text-muted-foreground">Keine Termine.</p> : null}
@@ -202,10 +202,10 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle>Verträge</CardTitle>
+                  <CardTitle>Rahmenverträge</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-2">
-                  {d.contracts.length === 0 ? <p className="text-sm text-muted-foreground">Noch keine Verträge.</p> : null}
+                  {d.contracts.length === 0 ? <p className="text-sm text-muted-foreground">Noch keine Rahmenverträge.</p> : null}
                   {d.contracts.map((k) => (
                     <div key={k.id} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
                       <div>
@@ -252,10 +252,10 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
                 <dd>
                   <PotentialBadge score={c.potentialScore} />
                 </dd>
-                <dt className="text-muted-foreground">Mitarbeiter</dt>
+                <dt className="text-muted-foreground">Mitarbeitende</dt>
                 <dd>{c.employeeCount ?? c.companySize ?? "–"}</dd>
-                <dt className="text-muted-foreground">Fläche</dt>
-                <dd>{c.areaSqm ? `${fmt.num(c.areaSqm)} m²` : "–"}</dd>
+                <dt className="text-muted-foreground">Gäste bei Events</dt>
+                <dd>{c.eventGuests ? `ca. ${fmt.num(c.eventGuests)} Personen` : "–"}</dd>
                 <dt className="text-muted-foreground">Gesch. Monatswert</dt>
                 <dd>{c.estimatedMonthlyValue ? fmt.eur(c.estimatedMonthlyValue) : "–"}</dd>
                 <dt className="text-muted-foreground">Wiedervorlage</dt>

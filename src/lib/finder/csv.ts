@@ -59,17 +59,17 @@ export function industryFromText(v: string | undefined): IndustryKey {
   const t = v.toLowerCase().trim();
   if ((INDUSTRY_KEYS as string[]).includes(t)) return t as IndustryKey;
   for (const [k, label] of Object.entries(INDUSTRIES)) if (label.toLowerCase() === t) return k as IndustryKey;
-  if (/hausverw|immobilienverw|property|wohnungs/.test(t)) return "property_management";
-  if (/arzt|praxis|zahn|medizin|klinik|physio|ärzt/.test(t)) return "medical";
-  if (/fitness|gym|sport/.test(t)) return "fitness";
-  if (/kita|kinderg|krippe|kindertages/.test(t)) return "daycare";
+  if (/event|location|veranstalt|messe/.test(t)) return "event_agency";
+  if (/agentur|werbung|marketing|media|medien|verlag|design|pr\b/.test(t)) return "agency";
+  if (/kanzlei|anwalt|recht|steuer|notar|berat|consult|wirtschaftsprüf|architekt/.test(t)) return "consulting";
+  if (/tech|software|start-?up|it\b|saas|digital/.test(t)) return "tech";
+  if (/cowork|business ?center|büro ?center/.test(t)) return "coworking";
+  if (/hotel|tagung|pension|hostel/.test(t)) return "hotel";
+  if (/arzt|praxis|zahn|medizin|klinik|ärzt|krankenhaus/.test(t)) return "medical";
   if (/schule|bildung|akademie|hochschule|uni|weiterbildung/.test(t)) return "education";
-  if (/handel|shop|laden|einzelh|retail|markt/.test(t)) return "retail";
-  if (/hotel|pension|hostel/.test(t)) return "hotel";
-  if (/gewerbepark|business ?park/.test(t)) return "business_park";
-  if (/logist|spedition|lager/.test(t)) return "logistics";
-  if (/gewerbeimmob|bürogebäude|bürohaus/.test(t)) return "commercial_property";
-  if (/büro|office|kanzlei|agentur|beratung|unternehmen|gmbh/.test(t)) return "office";
+  if (/fitness|gym|sport|wellness|yoga|spa/.test(t)) return "fitness";
+  if (/handel|shop|laden|showroom|store|boutique|retail/.test(t)) return "retail";
+  if (/büro|office|unternehmen|gmbh|firma|konzern|versicherung|bank/.test(t)) return "office";
   return "other";
 }
 
