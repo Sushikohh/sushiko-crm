@@ -42,9 +42,9 @@ function useSave() {
   return { pending, errors, save };
 }
 
-type Identity = { companyName: string; legalForm: string; street: string; postalCode: string; city: string; phone: string; email: string; website: string; managingDirector: string; registerInfo: string; vatId: string };
+type Identity = { companyName: string; legalForm: string; street: string; postalCode: string; city: string; phone: string; email: string; website: string; managingDirector: string; registerInfo: string; vatId: string; taxNumber: string };
 
-export function IdentityForm({ initial, readOnly }: { initial: Identity; readOnly: boolean }) {
+export function IdentityForm({ initial, readOnly, prefilled }: { initial: Identity; readOnly: boolean; prefilled?: boolean }) {
   const [v, setV] = React.useState(initial);
   const { pending, errors, save } = useSave();
   const f = (k: keyof Identity, label: string, hint?: string) => (
@@ -56,9 +56,14 @@ export function IdentityForm({ initial, readOnly }: { initial: Identity; readOnl
     <Card>
       <CardHeader>
         <CardTitle>Unternehmen & Impressum</CardTitle>
-        <CardDescription>Pflichtangaben für geschäftliche E-Mails und Angebote (§ 5 DDG, § 35a GmbHG bzw. § 37a HGB). Wird automatisch an jede E-Mail angehängt.</CardDescription>
+        <CardDescription>Pflichtangaben für geschäftliche E-Mails und Angebote. Werden automatisch an jede E-Mail angehängt.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-2">
+        {prefilled ? (
+          <Callout tone="blue" className="sm:col-span-2" title="Von sushiko-hh.de übernommen – bitte prüfen und speichern">
+            Die Angaben stammen aus dem Impressum der Website. Dort steht „Inhaber: Wida Gurbanian“; bei einer GbR müssen Impressum und E-Mails die Rechtsform und <b>alle Gesellschafter</b> nennen. Bitte ergänzen und danach auch das Impressum der Website anpassen.
+          </Callout>
+        ) : null}
         {f("companyName", "Firmenname *")}
         {f("legalForm", "Rechtsform", "z. B. GmbH, UG (haftungsbeschränkt), e. K.")}
         {f("street", "Straße und Hausnummer *")}
@@ -69,9 +74,10 @@ export function IdentityForm({ initial, readOnly }: { initial: Identity; readOnl
         {f("phone", "Telefon")}
         {f("email", "E-Mail")}
         {f("website", "Website")}
-        {f("managingDirector", "Geschäftsführung / Inhaber")}
+        {f("managingDirector", "Gesellschafter / Inhaber", "Bei einer GbR alle Gesellschafter mit Vor- und Nachnamen.")}
         {f("registerInfo", "Registergericht & -nummer", "z. B. Amtsgericht Hamburg HRB 123456")}
         {f("vatId", "USt-IdNr.")}
+        {f("taxNumber", "Steuernummer", "Erscheint auf Angeboten, nicht in E-Mails.")}
         {!readOnly ? (
           <div className="sm:col-span-2">
             <Button disabled={pending} onClick={() => save(() => saveIdentityAction(v))}>

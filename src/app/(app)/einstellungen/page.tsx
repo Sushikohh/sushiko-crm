@@ -9,6 +9,8 @@ import { getSetting } from "@/lib/services/settings";
 import { cn, fmt, requestTime } from "@/lib/utils";
 import { Callout, Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader, StatusDot } from "@/components/ui/primitives";
 import { IdentityForm, MailboxForm, ProfileForm, SalesForm, SuppressionPanel, TeamPanel } from "./forms";
+import { CatalogPanel } from "./catalog";
+import { DEFAULT_SIGNATURE, SUSHIKO_CATERING_CONTACT, SUSHIKO_IDENTITY } from "@/lib/business/sushiko";
 
 export const metadata = { title: "Einstellungen" };
 
@@ -19,6 +21,7 @@ const TABS = [
   { key: "team", label: "Team" },
   { key: "profil", label: "Profil" },
   { key: "sperrliste", label: "Sperrliste" },
+  { key: "katalog", label: "Katalog & Preise" },
   { key: "vertrieb", label: "Vertrieb" },
   { key: "system", label: "System" },
 ];
@@ -31,22 +34,26 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
   let content: React.ReactNode = null;
   if (tab === "unternehmen") {
-    const id = await getSetting("sender_identity");
+    const saved = await getSetting("sender_identity");
+    // Nicht gespeichert → Vorbelegung mit den Angaben von sushiko-hh.de (muss einmal bestätigt werden)
+    const id = saved ?? SUSHIKO_IDENTITY;
     content = (
       <IdentityForm
         readOnly={!isAdmin}
+        prefilled={!saved}
         initial={{
-          companyName: id?.companyName ?? "",
-          legalForm: id?.legalForm ?? "",
-          street: id?.street ?? "",
-          postalCode: id?.postalCode ?? "",
-          city: id?.city ?? "Hamburg",
-          phone: id?.phone ?? "",
-          email: id?.email ?? "",
-          website: id?.website ?? "",
-          managingDirector: id?.managingDirector ?? "",
-          registerInfo: id?.registerInfo ?? "",
-          vatId: id?.vatId ?? "",
+          companyName: id.companyName ?? "",
+          legalForm: id.legalForm ?? "",
+          street: id.street ?? "",
+          postalCode: id.postalCode ?? "",
+          city: id.city ?? "Hamburg",
+          phone: id.phone ?? "",
+          email: id.email ?? "",
+          website: id.website ?? "",
+          managingDirector: id.managingDirector ?? "",
+          registerInfo: id.registerInfo ?? "",
+          vatId: id.vatId ?? "",
+          taxNumber: id.taxNumber ?? "",
         }}
       />
     );
@@ -60,8 +67,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         initial={{
           id: m?.id,
           name: m?.name ?? "Geschäftspostfach",
-          email: m?.email ?? "",
-          fromName: m?.fromName ?? me.fullName,
+          email: m?.email ?? SUSHIKO_CATERING_CONTACT.email,
+          fromName: m?.fromName ?? "SUSHIKO Catering",
           imapHost: m?.imapHost ?? "",
           imapPort: String(m?.imapPort ?? 993),
           imapUser: m?.imapUser ?? "",
@@ -131,10 +138,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     const users = await db.select().from(schema.profiles).orderBy(asc(schema.profiles.fullName));
     content = <TeamPanel meId={me.id} isAdmin={isAdmin} localAuth={localAuth} users={users.map((u) => ({ id: u.id, fullName: u.fullName, email: u.email, role: u.role, active: u.active, createdAt: u.createdAt.toISOString() }))} />;
   } else if (tab === "profil") {
-    content = <ProfileForm localAuth={localAuth} initial={{ fullName: me.fullName, emailSignature: me.emailSignature ?? "" }} />;
+    content = <ProfileForm localAuth={localAuth} initial={{ fullName: me.fullName, emailSignature: me.emailSignature ?? DEFAULT_SIGNATURE }} />;
   } else if (tab === "sperrliste") {
     const items = await db.select().from(schema.suppressions).orderBy(desc(schema.suppressions.createdAt)).limit(1000);
     content = <SuppressionPanel isAdmin={isAdmin} items={items.map((s) => ({ id: s.id, email: s.email, reason: s.reason, createdAt: s.createdAt.toISOString() }))} />;
+  } else if (tab === "katalog") {
+    const c = (await getSetting("catalog"))!;
+    content = <CatalogPanel initial={c} readOnly={!isAdmin} />;
   } else if (tab === "vertrieb") {
     const s = (await getSetting("sales"))!;
     content = <SalesForm initial={s} />;

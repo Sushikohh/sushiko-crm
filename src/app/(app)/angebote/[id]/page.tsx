@@ -21,13 +21,14 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const [o] = await db.select().from(schema.offers).where(eq(schema.offers.id, id));
   if (!o) notFound();
-  const [[company], contact, identity, companies, contacts, deals] = await Promise.all([
+  const [[company], contact, identity, companies, contacts, deals, catalog] = await Promise.all([
     db.select().from(schema.companies).where(eq(schema.companies.id, o.companyId)),
     o.contactId ? db.select().from(schema.contacts).where(eq(schema.contacts.id, o.contactId)).then((r) => r[0] ?? null) : Promise.resolve(null),
     getSetting("sender_identity"),
     companyOptions(),
     contactOptions(),
     db.select({ id: schema.deals.id, name: schema.deals.title, companyId: schema.deals.companyId }).from(schema.deals).where(notInArray(schema.deals.stage, ["lost"])),
+    getSetting("catalog"),
   ]);
   const items = (o.items ?? []) as OfferItem[];
   const vat = Number(o.vatRate) / 100;
@@ -187,9 +188,10 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
             {identity ? (
               <p className="mt-10 border-t pt-3 text-[10px] text-muted-foreground">
                 {identity.companyName} {identity.legalForm} · {identity.street}, {identity.postalCode} {identity.city}
-                {identity.managingDirector ? ` · Geschäftsführung: ${identity.managingDirector}` : ""}
+                {identity.managingDirector ? ` · ${/gbr/i.test(identity.legalForm ?? "") ? "Gesellschafter" : "Geschäftsführung"}: ${identity.managingDirector}` : ""}
                 {identity.registerInfo ? ` · ${identity.registerInfo}` : ""}
                 {identity.vatId ? ` · USt-IdNr. ${identity.vatId}` : ""}
+                {identity.taxNumber ? ` · St.-Nr. ${identity.taxNumber}` : ""}
               </p>
             ) : null}
           </Card>
@@ -199,6 +201,7 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
             companies={companies}
             contacts={contacts}
             deals={deals}
+            catalog={catalog!}
             initial={{
               id: o.id,
               title: o.title,

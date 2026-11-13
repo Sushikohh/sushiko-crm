@@ -113,3 +113,27 @@ describe("Versandfenster (Europe/Berlin)", () => {
     expect(startOfBerlinDay(new Date("2026-11-04T12:00:00Z")).toISOString()).toBe("2026-11-03T23:00:00.000Z");
   });
 });
+
+describe("Sushiko-Geschäftsdaten", async () => {
+  const { netFromGross, PIECES_PER_GUEST, DEFAULT_CATALOG, SUSHIKO_IDENTITY } = await import("@/lib/business/sushiko");
+  const { isSenderIdentityComplete, legalFooterText } = await import("@/lib/templates");
+  it("rechnet Listenpreis brutto (7 %) in netto um", () => {
+    expect(netFromGross(103.9)).toBe(97.1);
+    expect(netFromGross(18.9)).toBe(17.66);
+  });
+  it("Faustregel Stück pro Gast stammt von der Catering-Seite", () => {
+    expect(PIECES_PER_GUEST.main).toMatchObject({ min: 10, max: 13 });
+    expect(DEFAULT_CATALOG.every((c) => c.priceGross && c.priceGross > 0)).toBe(true);
+  });
+  it("Impressumsdaten sind vollständig; GbR nennt Gesellschafter im Footer", () => {
+    expect(isSenderIdentityComplete(SUSHIKO_IDENTITY)).toBe(true);
+    expect(legalFooterText(SUSHIKO_IDENTITY)).toContain("SUSHIKO GbR");
+    expect(legalFooterText(SUSHIKO_IDENTITY)).toContain("Gesellschafter: Wida Gurbanian");
+  });
+  it("Umland nur mit großer Gästezahl attraktiv", () => {
+    const base = { industry: "agency" as const, hasWebsite: true, hasPhone: true, contactCount: 0, hasDecisionMaker: false, locationCount: 1 };
+    const hh = scoreCompany({ ...base, city: "Hamburg" }).score;
+    const small = scoreCompany({ ...base, city: "Norderstedt", eventGuests: 20 }).score;
+    expect(hh).toBeGreaterThan(small);
+  });
+});

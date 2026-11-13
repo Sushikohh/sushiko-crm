@@ -19,7 +19,11 @@ Interne Vertriebsplattform für Sushiko Hamburg: Firmenkunden finden (Agenturen,
 | Angebote & Aufträge | Catering-Angebote mit Eventdatum, Personenzahl, Lieferadresse, Allergene/Ernährungshinweisen, Positionen pro Event oder als monatliches Abo, Preis pro Person, USt.-Standard 7 % (Lieferung ohne Service). Druckbar als PDF. Bei „Angenommen“: Deal gewonnen, Liefertermin im Kalender, Abo-Positionen werden zum Rahmenvertrag. |
 | Automatisierungen | Wenn-Dann-Regeln mit 7 Auslösern und 6 Aktionen. Jede Regel läuft pro Ereignis genau einmal; Ausführungsprotokoll. |
 | Analytics | Quoten, Funnel, Antwortkategorien, Vergleich nach Branche, Kampagne und Mitarbeiter. |
-| Einstellungen | Impressum/Absender, Postfach mit Verbindungstest, Integrationen, Team, Profil/Signatur, Sperrliste, Vertrieb, Systemstatus. |
+| Einstellungen | Impressum/Absender (vorbelegt aus sushiko-hh.de), **Katalog & Preise** (Sushi-Menüs der Speisekarte mit Listenpreisen, Buffet-Stückpreis, Aufbaupauschale), Postfach mit Verbindungstest, Integrationen, Team, Profil/Signatur, Sperrliste, Vertrieb, Systemstatus. |
+
+## Daten von sushiko-hh.de
+
+`src/lib/business/sushiko.ts` enthält die von der Website übernommenen Fakten (Stand 13.11.2026): Impressum, Catering-Kontakt, Leistungsumfang, Mindestgrößen, Vorlauf, Liefergebiet, „Stück pro Gast“ und die Sushi-Menüs der Speisekarte. Sie werden als Vorbelegung genutzt (Impressum-Formular, Katalog, Angebotskonditionen, Kampagnenvorlage, KI-Prompts). Catering-Preise sind auf der Website nicht veröffentlicht; der Buffet-Preis pro Stück wird in **Einstellungen → Katalog & Preise** gepflegt.
 
 ## Schnellstart (lokal)
 

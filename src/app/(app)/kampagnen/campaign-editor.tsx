@@ -28,32 +28,36 @@ export type CampaignEditorValues = {
   steps: { delayDays: number; subject: string; body: string }[];
 };
 
+/** Vorlage auf Basis der Leistungen laut catering.sushiko-hh.de (nur für Empfänger mit Werbeerlaubnis). */
 export const DEFAULT_STEPS: CampaignEditorValues["steps"] = [
   {
     delayDays: 0,
-    subject: "Frisches Sushi für Ihr nächstes Team-Event, {{firma}}",
+    subject: "Sushi-Buffet für Ihre Weihnachtsfeier, {{firma}}",
     body: `{{anrede}},
 
-vielen Dank für Ihr Interesse an unserem Sushi-Catering. Gern stelle ich Ihnen kurz vor, was wir für {{firma}} tun können:
+vielen Dank für Ihr Interesse an SUSHIKO. Für Ihre nächste Firmenfeier oder den nächsten Office Lunch bei {{firma}} hätten wir etwas, das im Gedächtnis bleibt:
 
-• Sushi-Platten für Meetings, Kundentermine und Team-Lunches – auch vegetarisch und vegan
-• Catering für Firmenfeiern, Sommerfeste und Weihnachtsfeiern
-• Pünktliche Lieferung in {{stadtteil}} und ganz Hamburg, am Liefertag frisch zubereitet
+• Am Tag der Veranstaltung frisch zubereitet
+• Von uns geliefert und vor Ort als Buffet aufgebaut – Platten arrangiert, alles mit Allergenen beschildert
+• Vegetarische und vegane Sorten sowie gegarte Rollen für alle, die keinen rohen Fisch essen
+• Firmenfeiern ab 25 Gästen, Office Lunch ab 15 Personen
 
-Planen Sie in den nächsten Wochen ein Event oder ein Meeting mit Bewirtung? Dann schicke ich Ihnen gern ein unverbindliches Angebot – mir genügen Datum, Personenzahl und eventuelle Ernährungswünsche.
+Weihnachtsfeiern beliefern wir bis zum 20. Dezember in ganz Hamburg. Bis 30 Gäste genügen 48 Stunden Vorlauf, bis 80 Gäste drei Werktage.
+
+Schicken Sie mir einfach Datum, Gästezahl und Ort – Sie erhalten Ihr Angebot innerhalb von 24 Stunden.
 
 Mit freundlichen Grüßen
 {{absender}}
 {{absender_firma}}`,
   },
   {
-    delayDays: 6,
-    subject: "Re: Frisches Sushi für Ihr nächstes Team-Event, {{firma}}",
+    delayDays: 5,
+    subject: "Re: Sushi-Buffet für Ihre Weihnachtsfeier, {{firma}}",
     body: `{{anrede}},
 
-ich wollte kurz nachfragen, ob ein Sushi-Catering für Sie interessant ist. Gern stellen wir Ihnen für Ihr Team auch eine kleine Probierplatte zusammen.
+ich wollte kurz nachfragen, ob ein Sushi-Buffet für Ihre Weihnachtsfeier oder ein Team-Meeting interessant ist. Die Termine vor Weihnachten sind schnell vergeben.
 
-Eine kurze Antwort mit Termin und Personenzahl genügt – ich melde mich dann mit einem Angebot.
+Eine kurze Antwort mit Datum und Gästezahl genügt – oder Sie erreichen uns per WhatsApp unter 0179 594 64 61.
 
 Mit freundlichen Grüßen
 {{absender}}`,

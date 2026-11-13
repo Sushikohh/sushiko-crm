@@ -49,7 +49,10 @@ export function scoreCompany(i: ScoreInput): ScoreBreakdown {
   factors.push({ label: "Mehrere Standorte", points: Math.min(8, Math.max(0, i.locationCount - 1) * 4) });
   factors.push({ label: "Ansprechpartner bekannt", points: i.contactCount > 0 ? (i.hasDecisionMaker ? 15 : 9) : 0 });
   factors.push({ label: "Erreichbarkeit", points: (i.hasWebsite ? 3 : 0) + (i.hasPhone ? 3 : 0) });
-  factors.push({ label: "Liefergebiet Hamburg", points: !i.city || /hamburg/i.test(i.city) ? 10 : 3 });
+  // Catering liefert ganz Hamburg; Umland (z. B. Norderstedt, Pinneberg) nur auf Anfrage ab 40 Gästen
+  const inHamburg = !i.city || /hamburg/i.test(i.city);
+  const umland = !!i.city && /norderstedt|pinneberg|ahrensburg|reinbek|wedel|quickborn|glinde|schenefeld|halstenbek|rellingen|barsbüttel|oststeinbek/i.test(i.city);
+  factors.push({ label: "Liefergebiet", points: inHamburg ? 10 : umland ? ((i.eventGuests ?? 0) >= 40 ? 6 : 2) : 0 });
 
   const score = Math.max(0, Math.min(100, factors.reduce((s, f) => s + f.points, 0)));
   return { score, factors };

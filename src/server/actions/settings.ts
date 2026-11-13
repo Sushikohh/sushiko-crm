@@ -16,7 +16,7 @@ import { normalizeEmail } from "@/lib/normalize";
 import { enqueue, QUEUES } from "@/lib/queue";
 import { audit } from "@/lib/services/audit";
 import { suppress, unsuppress } from "@/lib/services/permissions";
-import { salesSettingsSchema, senderIdentitySchema, setSetting } from "@/lib/services/settings";
+import { catalogSettingsSchema, salesSettingsSchema, senderIdentitySchema, setSetting } from "@/lib/services/settings";
 import { run } from "@/server/action";
 
 export async function saveIdentityAction(raw: z.input<typeof senderIdentitySchema>) {
@@ -35,6 +35,17 @@ export async function saveSalesSettingsAction(raw: z.input<typeof salesSettingsS
     await setSetting("sales", salesSettingsSchema.parse(raw));
     revalidatePath("/einstellungen");
   }, "Gespeichert");
+}
+
+export async function saveCatalogAction(raw: z.input<typeof catalogSettingsSchema>) {
+  const me = await requireAdmin();
+  return run(async () => {
+    const v = catalogSettingsSchema.parse(raw);
+    await setSetting("catalog", v);
+    await audit({ actorId: me.id, action: "update", entity: "settings", entityId: "catalog", details: { items: v.items.length } });
+    revalidatePath("/einstellungen");
+    revalidatePath("/angebote");
+  }, "Katalog gespeichert");
 }
 
 const mailboxSchema = z.object({

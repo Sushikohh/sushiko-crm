@@ -3,6 +3,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { CATERING_FACTS, SUSHIKO_CATERING_CONTACT } from "@/lib/business/sushiko";
 
 /**
  * Provider-unabhängige KI-Schicht. Alle Aufrufe laufen serverseitig,
@@ -153,9 +154,17 @@ export const emailDraftSchema = z.object({
 });
 export type EmailDraft = z.infer<typeof emailDraftSchema>;
 
-const WRITER_SYSTEM = `Du schreibst geschäftliche E-Mails auf Deutsch für Sushiko, ein Sushi-Catering für Firmenkunden in Hamburg.
-Stil: herzlich, professionell, konkret, kurz (max. 150 Wörter), Sie-Form, keine Übertreibungen, keine erfundenen Referenzen,
-Preise, Gerichte, Zertifikate oder Rabatte. Keine Signatur und kein Impressum anhängen – das ergänzt das System.`;
+const WRITER_SYSTEM = `Du schreibst geschäftliche E-Mails auf Deutsch für SUSHIKO, ein Sushi-Catering für Firmenkunden in Hamburg.
+Stil: herzlich, professionell, konkret, kurz (max. 150 Wörter), Sie-Form, keine Übertreibungen.
+Verwende ausschließlich diese Fakten (laut catering.sushiko-hh.de) und erfinde nichts dazu – keine Preise, Rabatte, Referenzen oder Gerichte, die nicht genannt sind:
+- Am Tag der Veranstaltung frisch zubereitet, geliefert und vor Ort als Buffet aufgebaut (Platten arrangiert, Beilagen angerichtet, Allergen-Beschilderung).
+- Enthalten: ${CATERING_FACTS.included.join(", ")}. Nicht enthalten: ${CATERING_FACTS.notIncluded.join(", ")}.
+- Mindestgröße: Firmenfeier ab ${CATERING_FACTS.minGuests.event} Gästen, Office Lunch ab ${CATERING_FACTS.minGuests.officeLunch} Personen, Hochzeit ab ${CATERING_FACTS.minGuests.wedding} Gästen.
+- Vorlauf: ${CATERING_FACTS.leadTime}. Angebot innerhalb von ${CATERING_FACTS.offerWithin}.
+- Liefergebiet: ${CATERING_FACTS.area}. ${CATERING_FACTS.christmas}.
+- Vegetarische und vegane Sorten sowie gegarte Rollen (Tempura, Crispy Chicken, Surimi, flambierte Nigiri) sind immer dabei.
+- Kontakt Catering: Tel./WhatsApp ${SUSHIKO_CATERING_CONTACT.phone}, ${SUSHIKO_CATERING_CONTACT.email}.
+Keine Signatur und kein Impressum anhängen – das ergänzt das System.`;
 
 export async function personalizeEmail(input: {
   subject: string;
@@ -190,7 +199,7 @@ export async function draftReply(input: {
   const prompt = `Verfasse eine Antwort auf die letzte Nachricht im Verlauf im Namen von ${input.senderName}.
 ${input.analysis ? `Einordnung: ${input.analysis.category} – ${input.analysis.summary}` : ""}
 ${input.instructions ? `Zusätzliche Hinweise: ${input.instructions}` : ""}
-Wenn ein Event oder eine Bestellung angefragt wird, bestätige freundlich und frage gezielt nach fehlenden Angaben: Datum, Uhrzeit, Personenzahl, Lieferadresse, vegetarische/vegane Wünsche und Allergien. Nenne keine Preise, die nicht im Verlauf stehen.
+Wenn ein Event oder eine Bestellung angefragt wird, bestätige freundlich und frage gezielt nach fehlenden Angaben: Anlass, Datum, Uhrzeit, Gästezahl, Ort, vegetarische/vegane Anteile und Allergien. Sage zu, dass das Angebot innerhalb von 24 Stunden kommt. Nenne keine Preise, die nicht im Verlauf stehen.
 Wenn die Person keine E-Mails mehr wünscht, bestätige nur kurz und höflich die Abmeldung.
 
 ${history}`;

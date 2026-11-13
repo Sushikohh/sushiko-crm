@@ -69,6 +69,7 @@ export type SenderIdentity = {
   managingDirector?: string;
   registerInfo?: string;
   vatId?: string;
+  taxNumber?: string;
 };
 
 export function isSenderIdentityComplete(s: Partial<SenderIdentity> | null | undefined): boolean {
@@ -81,7 +82,7 @@ export function legalFooterText(s: SenderIdentity, unsubscribeUrl?: string): str
     [s.companyName, s.legalForm].filter(Boolean).join(" "),
     `${s.street}, ${s.postalCode} ${s.city}`,
     [s.phone && `Tel. ${s.phone}`, s.email, s.website].filter(Boolean).join(" · "),
-    [s.managingDirector && `Geschäftsführung: ${s.managingDirector}`, s.registerInfo, s.vatId && `USt-IdNr. ${s.vatId}`]
+    [s.managingDirector && `${/gbr|ohg|kg\b/i.test(s.legalForm ?? "") ? "Gesellschafter" : /e\.?\s?k|inhaber/i.test(s.legalForm ?? "") ? "Inhaber" : "Geschäftsführung"}: ${s.managingDirector}`, s.registerInfo, s.vatId && `USt-IdNr. ${s.vatId}`]
       .filter(Boolean)
       .join(" · "),
   ].filter((l) => l && l.trim());

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, Field, Input, NativeSelect, Textarea } from "@/components/ui/primitives";
 import { fmt } from "@/lib/utils";
 import { saveOfferAction } from "@/server/actions/sales";
+import { Callout } from "@/components/ui/primitives";
+import { DEFAULT_OFFER_TERMS, PIECES_PER_GUEST, netFromGross, type CatalogItem, type PortionKey } from "@/lib/business/sushiko";
 
 type Item = { description: string; persons: string; frequency: string; unit: "monthly" | "one_time"; quantity: string; unitPrice: string };
 type Opt = { id: string; name: string };
@@ -29,15 +31,14 @@ export type OfferEditorValues = {
   terms: string;
 };
 
-export const DEFAULT_TERMS = `Alle Preise verstehen sich netto zzgl. gesetzlicher Umsatzsteuer.
-Frisch zubereitet am Liefertag. Lieferung auf Platten bzw. in Boxen inkl. Sojasauce, Wasabi, Ingwer und Stäbchen.
-Endgültige Personenzahl bitte bis 3 Werktage vor dem Termin bestätigen. Kostenfreie Stornierung bis 5 Werktage vorher.
-Allergeninformationen erhalten Sie mit der Auftragsbestätigung. Gekühlt lagern und innerhalb von 2 Stunden nach Lieferung verzehren.
-Dieses Angebot ist bis zum angegebenen Datum gültig.`;
+export const DEFAULT_TERMS = DEFAULT_OFFER_TERMS;
 
 const num = (s: string) => Number(String(s).replace(",", ".")) || 0;
 
-export function OfferEditor({ initial, companies, contacts, deals }: { initial: OfferEditorValues; companies: Opt[]; contacts: (Opt & { companyId: string | null })[]; deals: (Opt & { companyId: string })[] }) {
+export type OfferCatalog = { items: CatalogItem[]; buffetPricePerPieceNet: number | null; setupFeeNet: number | null };
+
+export function OfferEditor({ initial, companies, contacts, deals, catalog }: { initial: OfferEditorValues; companies: Opt[]; contacts: (Opt & { companyId: string | null })[]; deals: (Opt & { companyId: string })[]; catalog: OfferCatalog }) {
+  const [portion, setPortion] = React.useState<PortionKey>("main");
   const [v, setV] = React.useState(initial);
   const [pending, start] = React.useTransition();
   const router = useRouter();
@@ -123,6 +124,88 @@ export function OfferEditor({ initial, companies, contacts, deals }: { initial: 
           <CardTitle>Leistungspositionen</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2">
+          <div className="mb-2 grid gap-3 rounded-lg border bg-muted/30 p-3 md:grid-cols-2">
+            <div className="grid gap-1.5">
+              <p className="text-xs font-medium">Buffet-Rechner</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <NativeSelect className="h-8 w-auto text-xs" value={portion} onChange={(e) => setPortion(e.target.value as PortionKey)} aria-label="Portion">
+                  {Object.entries(PIECES_PER_GUEST).map(([k, p]) => (
+                    <option key={k} value={k}>
+                      {p.label} ({p.min}–{p.max} Stk.)
+                    </option>
+                  ))}
+                </NativeSelect>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!num(v.guestCount)}
+                  title={num(v.guestCount) ? undefined : "Zuerst Personenzahl eintragen"}
+                  onClick={() => {
+                    const guests = Math.round(num(v.guestCount));
+                    const p = PIECES_PER_GUEST[portion];
+                    const perGuest = Math.ceil((p.min + p.max) / 2);
+                    const pieces = guests * perGuest;
+                    const add: Item[] = [
+                      {
+                        description: `Sushi-Buffet: Maki- und Inside-Out-Rollen mit Lachs, Thunfisch und Garnele, Tempura- und Special Rolls, Nigiri, vegetarische/vegane Sorten (ca. ${perGuest} Stück pro Gast)`,
+                        persons: String(guests),
+                        frequency: `${pieces} Stück`,
+                        unit: "one_time",
+                        quantity: String(pieces),
+                        unitPrice: catalog.buffetPricePerPieceNet != null ? String(catalog.buffetPricePerPieceNet) : "",
+                      },
+                    ];
+                    if (catalog.setupFeeNet) add.push({ description: "Lieferung und Buffet-Aufbau vor Ort inkl. Allergen-Beschilderung", persons: "", frequency: "pauschal", unit: "one_time", quantity: "1", unitPrice: String(catalog.setupFeeNet) });
+                    setV((s) => ({ ...s, items: [...s.items.filter((it) => it.description.trim() || it.unitPrice.trim()), ...add] }));
+                    if (catalog.buffetPricePerPieceNet == null) toast.info("Kein Stückpreis hinterlegt – bitte Preis eintragen (Einstellungen → Katalog & Preise).");
+                  }}
+                >
+                  <Plus /> Buffet berechnen
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {num(v.guestCount) ? `${Math.round(num(v.guestCount))} Gäste × ${Math.ceil((PIECES_PER_GUEST[portion].min + PIECES_PER_GUEST[portion].max) / 2)} Stück` : "Personenzahl oben eintragen."}
+                {catalog.buffetPricePerPieceNet != null ? ` · ${fmt.eur2(catalog.buffetPricePerPieceNet)} netto/Stück` : " · Stückpreis nicht hinterlegt"}
+              </p>
+            </div>
+            <div className="grid gap-1.5">
+              <p className="text-xs font-medium">Aus Katalog (Speisekarte)</p>
+              <NativeSelect
+                className="h-8 text-xs"
+                value=""
+                aria-label="Katalogposition hinzufügen"
+                onChange={(e) => {
+                  const it = catalog.items.find((x) => x.id === e.target.value);
+                  if (!it) return;
+                  setV((s) => ({
+                    ...s,
+                    items: [
+                      ...s.items.filter((x) => x.description.trim() || x.unitPrice.trim()),
+                      {
+                        description: `${it.name}${it.description ? `: ${it.description}` : ""}`,
+                        persons: "",
+                        frequency: it.pieces ? `${it.pieces} Stück` : "Platte",
+                        unit: "one_time",
+                        quantity: "1",
+                        unitPrice: it.priceGross != null ? String(netFromGross(it.priceGross, num(s.vatRate) || 7)) : "",
+                      },
+                    ],
+                  }));
+                }}
+              >
+                <option value="">Menü / Platte hinzufügen …</option>
+                {catalog.items.map((it) => (
+                  <option key={it.id} value={it.id}>
+                    {it.name}
+                    {it.pieces ? ` · ${it.pieces} Stk.` : ""}
+                    {it.priceGross != null ? ` · ${fmt.eur2(it.priceGross)} brutto` : ""}
+                  </option>
+                ))}
+              </NativeSelect>
+              <p className="text-[11px] text-muted-foreground">Listenpreis brutto wird als Nettopreis übernommen ({v.vatRate || 7} % USt. herausgerechnet).</p>
+            </div>
+          </div>
+          {v.items.some((it) => it.description.trim() && !it.unitPrice.trim()) ? <Callout tone="amber">Mindestens eine Position hat noch keinen Preis.</Callout> : null}
           <div className="hidden grid-cols-[1fr_80px_150px_120px_70px_100px_32px] gap-2 px-1 text-[11px] font-medium text-muted-foreground md:grid">
             <span>Leistung</span>
             <span>Personen</span>
