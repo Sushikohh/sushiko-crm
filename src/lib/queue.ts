@@ -70,7 +70,7 @@ export function getBoss(opts: { worker?: boolean } = {}): Promise<PgBoss> {
       const boss = new PgBoss({
         connectionString: env.DATABASE_URL,
         schema: "pgboss",
-        max: opts.worker ? 6 : 2,
+        max: env.PGBOSS_POOL_SIZE ?? (opts.worker ? 3 : 2),
         supervise: !!opts.worker,
         schedule: !!opts.worker,
         migrate: true,

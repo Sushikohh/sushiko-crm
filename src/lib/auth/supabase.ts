@@ -1,14 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { env } from "@/lib/env";
+import { supabaseConfig } from "@/lib/env";
 
 /** Supabase-Client für Server Components / Server Actions (Cookie-basierte Session). */
 export async function supabaseServer() {
   const store = await cookies();
-  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    throw new Error("Supabase ist nicht konfiguriert (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY).");
+  const { url, publishableKey } = supabaseConfig();
+  if (!url || !publishableKey) {
+    throw new Error("Supabase ist nicht konfiguriert (SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY).");
   }
-  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+  return createServerClient(url, publishableKey, {
     cookies: {
       getAll: () => store.getAll(),
       setAll: (list) => {

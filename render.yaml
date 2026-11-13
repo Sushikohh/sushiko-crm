@@ -1,0 +1,71 @@
+# Render Blueprint: Web-App + Hintergrunddienst in Frankfurt.
+# Einrichtung: Render → New → Blueprint → Repository „sushiko-crm“ wählen.
+# Die mit „sync: false“ markierten Werte fragt Render beim Anlegen ab (aus Supabase kopieren).
+
+envVarGroups:
+  - name: sushiko-crm-shared
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_PROVIDER
+        value: supabase
+      - key: AI_PROVIDER
+        value: anthropic
+      - key: FINDER_OSM_ENABLED
+        value: "true"
+      - key: DATABASE_POOL_SIZE
+        value: "4"
+      - key: LOG_LEVEL
+        value: info
+      - key: HOSTNAME
+        value: 0.0.0.0
+      # Zufällig erzeugt; bitte nie ändern (sonst müssen Postfach-Passwörter neu eingegeben werden)
+      - key: APP_ENCRYPTION_KEY
+        generateValue: true
+      - key: AUTH_SECRET
+        generateValue: true
+
+services:
+  - type: web
+    name: sushiko-crm
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    # Datenbank-Tabellen vor jedem Update anlegen/aktualisieren
+    preDeployCommand: node_modules/.bin/tsx scripts/migrate.ts
+    envVars:
+      - fromGroup: sushiko-crm-shared
+      - key: APP_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+
+  - type: worker
+    name: sushiko-crm-worker
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node_modules/.bin/tsx worker/index.ts
+    envVars:
+      - fromGroup: sushiko-crm-shared
+      - key: APP_URL
+        fromService:
+          type: web
+          name: sushiko-crm
+          envVarKey: APP_URL
+      - key: DATABASE_URL
+        fromService:
+          type: web
+          name: sushiko-crm
+          envVarKey: DATABASE_URL

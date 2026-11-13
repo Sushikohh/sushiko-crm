@@ -6,13 +6,26 @@
 2. **Datenbank:** Unter *Project Settings → Database* den Connection String des **Session Poolers** (Port 5432) als `DATABASE_URL` eintragen. Er verwendet die Rolle `postgres` und wird nur serverseitig genutzt.
 3. **Auth:** Unter *Authentication → Providers* E-Mail/Passwort aktivieren und die öffentliche Registrierung deaktivieren (*Allow new users to sign up* = aus). Werte setzen:
    - `AUTH_PROVIDER=supabase`
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` (für Einladungen aus der App)
+   - `SUPABASE_URL` (Project URL)
+   - `SUPABASE_PUBLISHABLE_KEY` (Publishable key)
+   - `SUPABASE_SECRET_KEY` (Secret key, für Einladungen aus der App)
+
+   Bewusst ohne `NEXT_PUBLIC_`: Solche Variablen friert Next.js beim Build ein; diese hier werden zur Laufzeit gelesen. Die alten Namen werden weiterhin akzeptiert.
 4. Migrationen ausführen (siehe unten). Sie legen RLS-Policies und einen Trigger an, der für neue Supabase-Benutzer ein Profil erzeugt. Der **erste Benutzer wird Administrator**.
 5. Den ersten Benutzer im Supabase-Dashboard einladen (*Authentication → Users → Invite*). Weitere Benutzer kommen danach über die App (*Einstellungen → Team*).
 
-## 2. Docker (z. B. Hetzner/IONOS-Server in Deutschland)
+## 2a. Render (empfohlen, ohne Kommandozeile)
+
+Im Repository liegt `render.yaml`. Damit legt Render Web-App und Hintergrunddienst in Frankfurt automatisch an:
+
+1. Auf render.com mit GitHub anmelden und Zugriff auf `sushiko-crm` erlauben.
+2. **New → Blueprint** → Repository `sushiko-crm` wählen.
+3. Die abgefragten Werte eintragen: `APP_URL` (z. B. `https://sushiko-crm.onrender.com`), `DATABASE_URL` (Supabase *Session pooler*), `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`.
+4. **Apply** klicken. Vor jedem Update laufen die Datenbank-Migrationen automatisch (`preDeployCommand`).
+
+`APP_ENCRYPTION_KEY` und `AUTH_SECRET` erzeugt Render selbst; nicht nachträglich ändern. Stimmt die tatsächliche Adresse der Web-App nicht mit `APP_URL` überein, `APP_URL` korrigieren, denn sie steht in den Abmeldelinks der E-Mails. Kosten: zwei Dienste im Plan „Starter“.
+
+## 2b. Docker (z. B. Hetzner/IONOS-Server in Deutschland)
 
 ```bash
 cp .env.example .env

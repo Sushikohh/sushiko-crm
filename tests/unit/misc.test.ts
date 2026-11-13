@@ -137,3 +137,12 @@ describe("Sushiko-Geschäftsdaten", async () => {
     expect(hh).toBeGreaterThan(small);
   });
 });
+
+describe("Verschlüsselungsschlüssel", async () => {
+  const { encryptionKeyFrom } = await import("@/lib/crypto");
+  it("akzeptiert base64-32-Byte und leitet andere Formate ab", () => {
+    expect(encryptionKeyFrom(Buffer.alloc(32, 7).toString("base64"))?.length).toBe(32);
+    expect(encryptionKeyFrom("x".repeat(48))?.length).toBe(32);
+    expect(encryptionKeyFrom("zu-kurz")).toBeNull();
+  });
+});

@@ -13,8 +13,12 @@ export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   let hasSession = false;
 
-  if (process.env.AUTH_PROVIDER === "supabase" && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+  // Dynamischer Zugriff: wird zur Laufzeit gelesen und nicht beim Build eingefroren
+  const read = (...keys: string[]) => keys.map((k) => process.env[k]).find((v) => !!v) ?? "";
+  const sbUrl = read("SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL");
+  const sbKey = read("SUPABASE_PUBLISHABLE_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (process.env.AUTH_PROVIDER === "supabase" && sbUrl && sbKey) {
+    const supabase = createServerClient(sbUrl, sbKey, {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (list) => {

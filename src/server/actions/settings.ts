@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import { db, schema } from "@/db";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { encryptSecret } from "@/lib/crypto";
-import { env } from "@/lib/env";
+import { env, supabaseConfig } from "@/lib/env";
 import { imapConfig, smtpConfig } from "@/lib/mail/mailbox";
 import { verifyImap } from "@/lib/mail/imap";
 import { verifySmtp } from "@/lib/mail/smtp";
@@ -162,8 +162,9 @@ export async function inviteUserAction(raw: z.input<typeof inviteSchema>) {
   return run(async () => {
     const v = inviteSchema.parse(raw);
     if (env.AUTH_PROVIDER === "supabase") {
-      if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.NEXT_PUBLIC_SUPABASE_URL) throw new Error("Für Einladungen wird SUPABASE_SERVICE_ROLE_KEY benötigt. Alternativ Benutzer im Supabase-Dashboard einladen.");
-      const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+      const sb = supabaseConfig();
+      if (!sb.secretKey || !sb.url) throw new Error("Für Einladungen wird SUPABASE_SECRET_KEY benötigt. Alternativ Benutzer im Supabase-Dashboard einladen.");
+      const admin = createClient(sb.url, sb.secretKey, { auth: { persistSession: false } });
       const { data, error } = await admin.auth.admin.inviteUserByEmail(v.email, { data: { full_name: v.fullName }, redirectTo: `${env.APP_URL}/login` });
       if (error) throw new Error(error.message);
       await db

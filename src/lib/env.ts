@@ -10,12 +10,20 @@ const schema = z.object({
   APP_URL: z.string().default("http://localhost:3000"),
   DATABASE_URL: z.string().default("postgres://crm:crm@localhost:5432/crm"),
   DATABASE_POOL_SIZE: z.coerce.number().default(10),
+  /** Verbindungen der Job-Queue (pg-boss). Klein halten beim Supabase-Pooler. */
+  PGBOSS_POOL_SIZE: z.coerce.number().optional(),
 
   AUTH_PROVIDER: z.enum(["supabase", "local"]).default("local"),
   AUTH_SECRET: z.string().default(""),
+  // Supabase – serverseitig zur Laufzeit gelesen (bewusst ohne NEXT_PUBLIC_, das würde beim Build eingefroren)
+  SUPABASE_URL: z.string().optional(),
+  SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
+  SUPABASE_SECRET_KEY: z.string().optional(),
+  // Ältere Namen werden weiterhin akzeptiert
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  RENDER_EXTERNAL_URL: z.string().optional(),
 
   /** 32-Byte-Schlüssel (base64) zur Verschlüsselung von Postfach-Passwörtern. */
   APP_ENCRYPTION_KEY: z.string().default(""),
@@ -57,8 +65,23 @@ export type Env = z.infer<typeof schema>;
 
 let cached: Env | undefined;
 function load(): Env {
-  if (!cached) cached = schema.parse(process.env);
+  if (!cached) {
+    const e = schema.parse(process.env);
+    // APP_URL nicht gesetzt → von der Hosting-Plattform übernehmen (z. B. Render)
+    if (!process.env.APP_URL && e.RENDER_EXTERNAL_URL) e.APP_URL = e.RENDER_EXTERNAL_URL;
+    cached = e;
+  }
   return cached;
+}
+
+/** Supabase-Zugangsdaten (neue Namen bevorzugt, alte als Fallback). */
+export function supabaseConfig() {
+  const e = load();
+  return {
+    url: e.SUPABASE_URL || e.NEXT_PUBLIC_SUPABASE_URL || "",
+    publishableKey: e.SUPABASE_PUBLISHABLE_KEY || e.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+    secretKey: e.SUPABASE_SECRET_KEY || e.SUPABASE_SERVICE_ROLE_KEY || "",
+  };
 }
 
 /** Validierte Umgebungsvariablen (lazy, damit Tests/Builds ohne .env laufen). */
@@ -76,8 +99,7 @@ export function assertProductionSecrets() {
   const e = load();
   const problems: string[] = [];
   if (e.AUTH_PROVIDER === "local" && e.AUTH_SECRET.length < 32) problems.push("AUTH_SECRET (mind. 32 Zeichen)");
-  if (Buffer.from(e.APP_ENCRYPTION_KEY, "base64").length !== 32) problems.push("APP_ENCRYPTION_KEY (32 Byte base64)");
-  if (e.AUTH_PROVIDER === "supabase" && (!e.NEXT_PUBLIC_SUPABASE_URL || !e.NEXT_PUBLIC_SUPABASE_ANON_KEY))
-    problems.push("NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if ((e.APP_ENCRYPTION_KEY ?? "").trim().length < 32) problems.push("APP_ENCRYPTION_KEY (mind. 32 Zeichen)");
+  if (e.AUTH_PROVIDER === "supabase" && (!supabaseConfig().url || !supabaseConfig().publishableKey)) problems.push("SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY");
   return problems;
 }

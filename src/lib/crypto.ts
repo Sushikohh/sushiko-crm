@@ -1,11 +1,21 @@
-import { createCipheriv, createDecipheriv, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { env } from "./env";
 
+/**
+ * 32-Byte-Schlüssel aus APP_ENCRYPTION_KEY: entweder direkt (base64, 32 Byte) oder – bei anderen
+ * Formaten mit mindestens 32 Zeichen, z. B. von Hosting-Plattformen generiert – per SHA-256 abgeleitet.
+ */
+export function encryptionKeyFrom(raw: string): Buffer | null {
+  const v = raw.trim();
+  const b64 = Buffer.from(v, "base64");
+  if (b64.length === 32 && /^[A-Za-z0-9+/=_-]+$/.test(v)) return b64;
+  if (v.length >= 32) return createHash("sha256").update(v, "utf8").digest();
+  return null;
+}
+
 function key(): Buffer {
-  const k = Buffer.from(env.APP_ENCRYPTION_KEY || "", "base64");
-  if (k.length !== 32) {
-    throw new Error("APP_ENCRYPTION_KEY fehlt oder ist ungültig (erwartet: 32 Byte, base64). Erzeugen mit: openssl rand -base64 32");
-  }
+  const k = encryptionKeyFrom(env.APP_ENCRYPTION_KEY || "");
+  if (!k) throw new Error("APP_ENCRYPTION_KEY fehlt oder ist zu kurz (mind. 32 Zeichen). Erzeugen mit: openssl rand -base64 32");
   return k;
 }
 
