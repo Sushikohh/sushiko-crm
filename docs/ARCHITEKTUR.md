@@ -18,7 +18,7 @@ Browser ──► Next.js (App Router, Server Components, Server Actions, Route 
 
 | Ordner | Inhalt |
 |---|---|
-| `src/db/schema.ts` | Datenmodell (Drizzle). SQL-Migrationen in `supabase/migrations`, inkl. RLS, Volltextindizes und Auth-Trigger. |
+| `src/db/schema.ts` | Datenmodell (Drizzle). SQL-Migrationen in `db/migrations` (bewusst nicht unter `supabase/`, damit eine Supabase-GitHub-Integration sie nicht zusätzlich ausführt), inkl. RLS, Volltextindizes und Auth-Trigger. |
 | `src/lib/*` | Fachlogik ohne UI. Pure Module (`compliance`, `templates`, `mail/classify`, `finder/*`, `scoring`) und DB-Services (`services/*`). Web-App und Worker nutzen sie gemeinsam. |
 | `src/server/actions/*` | Server Actions: Authentifizierung, Zod-Validierung, einheitliches Fehlerformat. |
 | `src/app/(app)/*` | Seiten (deutsche URLs). |

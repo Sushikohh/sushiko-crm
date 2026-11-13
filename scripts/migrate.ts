@@ -7,7 +7,7 @@ async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL fehlt");
   const client = postgres(url, { max: 1, onnotice: () => {} });
-  await migrate(drizzle(client), { migrationsFolder: "./supabase/migrations" });
+  await migrate(drizzle(client), { migrationsFolder: "./db/migrations" });
   await client.end();
   console.log("Migrationen angewendet.");
 }
